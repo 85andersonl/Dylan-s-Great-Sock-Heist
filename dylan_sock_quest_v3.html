@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dylan's Sock Quest: Final Gift Edition</title>
+    <style>
+        body {
+            background-color: #111; /* Dark background outside game */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Verdana', sans-serif;
+            overflow: hidden;
+            flex-direction: column;
+            color: white;
+        }
+        #gameContainer {
+            position: relative;
+            box-shadow: 0 0 50px rgba(138, 43, 226, 0.5); /* Purple glow */
+            border: 5px solid #8A2BE2; /* Purple border */
+            border-radius: 12px;
+            overflow: hidden;
+            width: 800px;
+            height: 600px;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+        }
+        
+        /* UI Overlays (Menus) */
+        #startScreen, #endScreenControls {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(17, 17, 17, 0.95); /* Dark opaque background for start */
+            z-index: 20;
+            text-align: center;
+        }
+
+        #endScreenControls { 
+            display: none; 
+            pointer-events: none; 
+            justify-content: flex-end; /* Push button to bottom */
+            padding-bottom: 50px; /* Space from bottom */
+            background: transparent; /* Transparent so we see the canvas graphic */
+        }
+        
+        #endScreenControls button { 
+            pointer-events: auto; 
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* Typography & Colors for UI */
+        h1 { 
+            margin: 0 0 10px 0; font-size: 50px; 
+            color: #dcf7e6; /* Light Mint */
+            text-shadow: 2px 2px 0px #8A2BE2; /* Purple Shadow */
+            letter-spacing: 3px; 
+            text-transform: uppercase;
+        }
+        h2 { font-size: 24px; color: #8A2BE2; margin: 0 0 20px 0; } /* Purple */
+        p { font-size: 20px; color: #fff; margin: 5px 0; }
+        
+        /* Buttons */
+        button {
+            padding: 15px 50px;
+            font-size: 22px;
+            background-color: #8A2BE2; /* Purple */
+            color: white;
+            border: 3px solid #fff;
+            border-radius: 30px;
+            cursor: pointer; 
+            font-weight: bold;
+            margin-top: 30px;
+            font-family: 'Verdana', sans-serif;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        button:hover { background-color: #9932CC; border-color: #dcf7e6; }
+        button:active { transform: scale(0.95); }
+
+        /* In-Game Heads Up Display */
+        #inGameUI {
+            position: absolute;
+            top: 15px; left: 20px;
+            color: white; 
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            text-shadow: 
+                -1px -1px 0 #000, 1px -1px 0 #000,
+                -1px  1px 0 #000, 1px  1px 0 #000;
+        }
+        
+        #statusMsg { 
+            position: absolute; bottom: 20px; width: 100%; 
+            text-align: center; font-size: 40px; 
+            font-weight: bold;
+            color: white; 
+            text-shadow: 
+                -2px -2px 0 #000, 2px -2px 0 #000,
+                -2px  2px 0 #000, 2px  2px 0 #000;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="gameContainer">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div id="inGameUI" style="display:none;">Socks: <span id="scoreSpan">0</span> / 15</div>
+    <div id="statusMsg" style="display:none;"></div>
+
+    <div id="startScreen">
+        <h1>DYLAN'S SOCK QUEST</h1>
+        <h2>Wizard Edition</h2>
+        <p>Collect all 15 socks to unlock the door.</p>
+        <p>You have 3 seconds before Melissa arrives!</p>
+        <button onclick="startGame()">START GAME</button>
+    </div>
+
+    <div id="endScreenControls">
+        <button id="restartBtn" onclick="resetGame()">TRY AGAIN</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startScreen = document.getElementById('startScreen');
+    const endScreenControls = document.getElementById('endScreenControls');
+    const inGameUI = document.getElementById('inGameUI');
+    const statusMsg = document.getElementById('statusMsg');
+    const scoreSpan = document.getElementById('scoreSpan');
+
+    // --- Game Settings ---
+    let frame = 0;
+    let gameState = 'START'; 
+    let socksCollected = 0;
+    const socksNeeded = 15; // INCREASED TO 15
+    let startTime;
+    const headStartDuration = 3000; // 3 SECONDS
+
+    // --- Objects ---
+    let dylan = { x: 400, y: 400, w: 60, h: 40, speed: 6, dirX: 1, isMoving: false };
+    let melissa = { x: -100, y: 400, w: 50, h: 110, speed: 3.5, dirX: 1 };
+    const door = { x: 350, y: 60, w: 100, h: 120 }; 
+    let socks = [];
+
+    // --- Inputs ---
+    const keys = {};
+    window.addEventListener('keydown', e => keys[e.key] = true);
+    window.addEventListener('keyup', e => keys[e.key] = false);
+
+    // --- Core Functions ---
+    function startGame() {
+        startScreen.style.display = 'none';
+        inGameUI.style.display = 'block';
+        statusMsg.style.display = 'block';
+        resetGame();
+        loop();
+    }
+
+    function resetGame() {
+        gameState = 'PLAYING';
+        endScreenControls.style.display = 'none';
+        socksCollected = 0;
+        scoreSpan.innerText = 0;
+        frame = 0;
+        startTime = Date.now();
+        dylan.x = 400; dylan.y = 400;
+        melissa.x = -150; melissa.y = 400;
+        statusMsg.innerText = "";
+        
+        // Spawn EXACTLY 15 Socks
+        socks = [];
+        for(let i=0; i<socksNeeded; i++) {
+            socks.push({
+                x: Math.random() * 700 + 50,
+                y: Math.random() * 300 + 200, 
+                color1: `hsl(${Math.random()*360}, 70%, 60%)`, 
+                color2: `hsl(${Math.random()*360}, 70%, 40%)`
+            });
+        }
+    }
+
+    // --- Helper: Draw Text with Outline ---
+    function drawOutlinedText(text, x, y, fontSize, align = "center", color = "white") {
+        ctx.font = `bold ${fontSize}px Verdana`;
+        ctx.textAlign = align;
+        ctx.lineJoin = "round";
+        ctx.miterLimit = 2;
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 4;
+        ctx.strokeText(text, x, y);
+        ctx.fillStyle = color;
+        ctx.fillText(text, x, y);
+    }
+
+    // --- Drawing The World ---
+    function drawEnvironment() {
+        // Wall (LIGHTER MINT GREEN)
+        ctx.fillStyle = "#dcf7e6"; // Updated color
+        ctx.fillRect(0,0, canvas.width, 200);
+        
+        // Floor (Wood Brown)
+        let floorGrad = ctx.createLinearGradient(0, 200, 0, 600);
+        floorGrad.addColorStop(0, "#d2b48c"); // Tan
+        floorGrad.addColorStop(1, "#8b4513"); // Saddle Brown
+        ctx.fillStyle = floorGrad;
+        ctx.fillRect(0, 200, canvas.width, 400);
+        
+        // Floorboards lines
+        ctx.strokeStyle = "rgba(0,0,0,0.1)";
+        ctx.lineWidth = 2;
+        for(let i=0; i<canvas.width; i+= 80) {
+            ctx.beginPath(); ctx.moveTo(i, 200); ctx.lineTo(i-150, 600); ctx.stroke();
+        }
+
+        // Draw Door
+        ctx.fillStyle = (socksCollected >= socksNeeded) ? "#fff" : "#333"; 
+        ctx.fillRect(door.x, door.y, door.w, door.h);
+        
+        // Door Frame
+        ctx.strokeStyle = "#4a3020"; ctx.lineWidth = 6;
+        ctx.strokeRect(door.x-3, door.y-3, door.w+6, door.h+6);
+        
+        // Doggy Flap
+        ctx.fillStyle = "#111"; 
+        ctx.fillRect(door.x+10, door.y+70, door.w-20, 50);
+        
+        // Label
+        drawOutlinedText("DOGGY DOOR", door.x + door.w/2, door.y - 15, 16, "center", "white");
+    }
+
+    // --- Drawing Assets ---
+    function drawRealSock(x, y, c1, c2) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = c1;
+        ctx.beginPath();
+        ctx.moveTo(0, 0); ctx.lineTo(0, 20); 
+        ctx.bezierCurveTo(0, 30, 10, 30, 15, 25); 
+        ctx.lineTo(25, 25); 
+        ctx.bezierCurveTo(30, 25, 30, 15, 25, 15); 
+        ctx.lineTo(10, 15); ctx.lineTo(10, 0); ctx.fill();
+        ctx.fillStyle = c2;
+        ctx.beginPath();
+        ctx.moveTo(25, 15); ctx.bezierCurveTo(30, 15, 30, 25, 25, 25);
+        ctx.lineTo(20, 25); ctx.lineTo(20, 15); ctx.fill();
+        ctx.fillStyle = c2; ctx.fillRect(0, 0, 10, 5);
+        ctx.restore();
+    }
+
+    function drawDylan(x, y, dir, hasSocks) {
+        ctx.save();
+        ctx.translate(x + dylan.w/2, y + dylan.h/2);
+        if (dir === -1) ctx.scale(-1, 1);
+
+        let moveBounce = dylan.isMoving ? Math.sin(frame * 0.4) * 3 : 0;
+        let legMove = dylan.isMoving ? Math.sin(frame * 0.4) * 10 : 0;
+
+        // Legs (4)
+        ctx.fillStyle = "#111"; 
+        ctx.fillRect(-20 + legMove, 15, 8, 25); // BL
+        ctx.fillRect(10 - legMove, 15, 8, 25);  // FL
+        ctx.fillRect(-25 - legMove, 18, 8, 25); // BR
+        ctx.fillRect(15 + legMove, 18, 8, 25);  // FR
+
+        // Tail
+        let tailWag = Math.sin(frame * 0.5) * 15;
+        ctx.strokeStyle = "#111"; ctx.lineWidth = 8; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(-25, 5); ctx.quadraticCurveTo(-45, -5 + tailWag, -55, 0 + tailWag); ctx.stroke();
+        ctx.strokeStyle = "white"; ctx.lineWidth = 6; 
+        ctx.beginPath(); ctx.moveTo(-50, -2 + tailWag); ctx.lineTo(-55, 0 + tailWag); ctx.stroke();
+
+        // Body
+        ctx.fillStyle = "#111"; 
+        ctx.beginPath(); ctx.ellipse(0, 5 + moveBounce, 35, 22, 0, 0, Math.PI * 2); ctx.fill();
+
+        // White Chest
+        ctx.fillStyle = "white";
+        ctx.beginPath(); 
+        ctx.moveTo(0, 10 + moveBounce); ctx.lineTo(20, 10 + moveBounce); 
+        ctx.lineTo(15, 25 + moveBounce); ctx.lineTo(5, 28 + moveBounce); ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#111"; 
+        ctx.beginPath(); ctx.arc(25, -10 + moveBounce, 18, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(20, -18 + moveBounce, 8, 14, -0.5, 0, Math.PI * 2); ctx.fill(); 
+
+        // Face
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(28, -14 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
+        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(29, -14 + moveBounce, 1.5, 0, Math.PI * 2); ctx.fill(); 
+
+        if (hasSocks) {
+            ctx.fillStyle = socks[0] ? socks[0].color1 : "#FF69B4";
+            ctx.beginPath(); ctx.arc(35, -5 + moveBounce, 8, 0, Math.PI*2); ctx.fill();
+        } else {
+             ctx.fillStyle = "pink";
+             ctx.beginPath(); ctx.ellipse(32, -5+moveBounce, 4, 6, 0.5, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    function drawMelissa(x, y, dir, isAngry) {
+        ctx.save();
+        ctx.translate(x + melissa.w/2, y + melissa.h/2);
+        if (dir === -1) ctx.scale(-1, 1);
+
+        let sway = isAngry ? 0 : Math.sin(frame * 0.1) * 2;
+        let hairFlow = isAngry ? 0 : Math.sin(frame * 0.15) * 5;
+
+        // Hair
+        ctx.fillStyle = "#8A2BE2"; 
+        ctx.beginPath(); ctx.moveTo(0, -50); 
+        ctx.bezierCurveTo(-50, -20, -60 + hairFlow, 20, -40 + hairFlow, 60); ctx.lineTo(15, -30); ctx.fill();
+        ctx.fillStyle = "#111"; 
+        ctx.beginPath(); ctx.moveTo(0, -50); 
+        ctx.bezierCurveTo(-45, -20, -55 + hairFlow, 10, -35 + hairFlow, 50); ctx.lineTo(15, -30); ctx.fill();
+
+        // Robe
+        ctx.fillStyle = "#1a1a1a"; 
+        ctx.beginPath(); ctx.moveTo(5, -30); ctx.lineTo(-25, 55); ctx.lineTo(25, 55); ctx.lineTo(15, -30); ctx.fill();
+        ctx.fillStyle = "#8b0000"; ctx.fillRect(-15, -25, 6, 80); ctx.fillRect(15, -25, 6, 80);
+
+        // Head
+        ctx.fillStyle = "#ffccaa"; ctx.beginPath(); ctx.arc(5, -35 + sway, 13, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(10, -35 + sway, 2, 0, Math.PI*2); ctx.fill();
+
+        // Hat
+        ctx.save(); ctx.translate(2, -45 + sway); ctx.rotate(-0.1);
+        ctx.fillStyle = "#111"; ctx.beginPath(); ctx.ellipse(0, 0, 28, 6, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(0, -50); ctx.lineTo(18, 0); ctx.fill();
+        ctx.fillStyle = "#8A2BE2"; ctx.fillRect(-14, -8, 28, 5);
+        ctx.restore();
+
+        // Arms
+        if (isAngry) {
+            ctx.strokeStyle = "#ffccaa"; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(-15, 10); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(10, -10); ctx.lineTo(25, 10); ctx.stroke();
+        } else {
+            ctx.strokeStyle = "#ffccaa"; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(10, -10); ctx.lineTo(25, 0); ctx.stroke();
+            ctx.strokeStyle = "#5C4033"; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(25, 0); ctx.lineTo(45, -5); ctx.stroke();
+            ctx.fillStyle = "#00ffff"; 
+            ctx.beginPath(); ctx.arc(45, -5, Math.random()*4+2, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    // --- Game Logic ---
+    function update() {
+        if (gameState !== 'PLAYING') return;
+        frame++;
+
+        let elapsed = Date.now() - startTime;
+        let remainingHeadStart = Math.ceil((headStartDuration - elapsed) / 1000);
+
+        // UI Updates - Countdown
+        if (remainingHeadStart > 0) {
+            statusMsg.innerText = `Melissa enters in: ${remainingHeadStart}`;
+            statusMsg.style.color = "white";
+        } else if (remainingHeadStart <= 0 && melissa.x < -50) {
+             statusMsg.innerText = "MELISSA IS HERE! RUN!"; 
+             statusMsg.style.color = "#FF1493"; 
+        } else if (socksCollected < socksNeeded) {
+             statusMsg.innerText = ""; 
+        }
+
+        // Dylan Movement
+        dylan.isMoving = false;
+        if (keys['ArrowUp'] && dylan.y > 180) { dylan.y -= dylan.speed; dylan.isMoving = true; }
+        if (keys['ArrowDown'] && dylan.y + dylan.h < 600) { dylan.y += dylan.speed; dylan.isMoving = true; }
+        if (keys['ArrowLeft'] && dylan.x > 0) { dylan.x -= dylan.speed; dylan.dirX = -1; dylan.isMoving = true; }
+        if (keys['ArrowRight'] && dylan.x + dylan.w < 800) { dylan.x += dylan.speed; dylan.dirX = 1; dylan.isMoving = true; }
+
+        // Melissa AI
+        if (remainingHeadStart <= 0) {
+            let dx = dylan.x - melissa.x;
+            let dy = dylan.y - melissa.y;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            
+            if (dist > 10) {
+                melissa.x += (dx/dist) * melissa.speed;
+                melissa.y += (dy/dist) * melissa.speed;
+                melissa.dirX = dx > 0 ? 1 : -1;
+            }
+            if (dist < 40) { gameState = 'LOST'; endGame(); }
+        }
+
+        // Collect Socks
+        for (let i = socks.length - 1; i >= 0; i--) {
+            let s = socks[i];
+            if (dylan.x < s.x + 30 && dylan.x + dylan.w > s.x && 
+                dylan.y < s.y + 30 && dylan.y + dylan.h > s.y) {
+                socks.splice(i, 1);
+                socksCollected++;
+                scoreSpan.innerText = socksCollected;
+                if (socksCollected >= socksNeeded) {
+                    statusMsg.innerText = "RUN TO THE DOGGY DOOR!";
+                    statusMsg.style.color = "#00FF00";
+                }
+            }
+        }
+
+        // Win
+        if (socksCollected >= socksNeeded) {
+            if (dylan.y < door.y + door.h && dylan.x > door.x - 20 && dylan.x < door.x + door.w + 20) {
+                gameState = 'WON'; endGame();
+            }
+        }
+    }
+
+    function endGame() {
+        endScreenControls.style.display = 'flex'; 
+        statusMsg.innerText = "";
+    }
+
+    // --- Draw Loop ---
+    function draw() {
+        if(gameState === 'START') return;
+
+        ctx.clearRect(0,0, canvas.width, canvas.height);
+
+        if (gameState === 'WON') { drawWinScene(); return; }
+        if (gameState === 'LOST') { drawLoseScene(); return; }
+
+        drawEnvironment();
+        socks.forEach(s => drawRealSock(s.x, s.y, s.color1, s.color2));
+        
+        drawDylan(dylan.x, dylan.y, dylan.dirX, socksCollected > 0);
+        
+        let elapsed = Date.now() - startTime;
+        if (elapsed > headStartDuration || melissa.x > -100) {
+             drawMelissa(melissa.x, melissa.y, melissa.dirX, false);
+        }
+    }
+
+    // --- Scene Helpers ---
+    function drawTree(x, y) {
+        ctx.fillStyle = "#8B4513"; ctx.fillRect(x, y, 20, 60);
+        ctx.fillStyle = "#228B22"; 
+        ctx.beginPath(); ctx.arc(x+10, y-10, 30, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x-10, y+10, 25, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+30, y+5, 25, 0, Math.PI*2); ctx.fill();
+    }
+
+    function drawShed(x, y) {
+        ctx.fillStyle = "#f0f0f0"; ctx.fillRect(x, y, 100, 80);
+        ctx.fillStyle = "#777"; 
+        ctx.beginPath(); ctx.moveTo(x-10, y); ctx.lineTo(x+50, y-40); ctx.lineTo(x+110, y); ctx.fill();
+        ctx.strokeStyle = "#ccc"; ctx.lineWidth=2; ctx.strokeRect(x+30, y+20, 40, 60);
+        ctx.fillStyle = "#aaa"; ctx.beginPath(); ctx.arc(x+65, y+50, 3, 0, Math.PI*2); ctx.fill();
+    }
+
+    function drawWinScene() {
+        frame++;
+        
+        // Background: Purple Gradient (Light enough to see black dog)
+        let grad = ctx.createLinearGradient(0, 0, 0, 600);
+        grad.addColorStop(0, "#9370DB"); // Medium Purple
+        grad.addColorStop(0.5, "#E6E6FA"); // Lavender (Light)
+        grad.addColorStop(1, "#9370DB"); // Medium Purple
+        ctx.fillStyle = grad;
+        ctx.fillRect(0,0, canvas.width, canvas.height);
+        
+        // Grass Patch for garden feel
+        ctx.fillStyle = "#32CD32"; ctx.fillRect(0, 300, canvas.width, 300);
+
+        // Scenery
+        drawShed(50, 350);
+        drawTree(650, 350); drawTree(720, 380); drawTree(580, 400);
+
+        // Dylan Running
+        let runX = 400 + Math.sin(frame * 0.05) * 300;
+        let runY = 400 + Math.cos(frame * 0.07) * 50; 
+        let runDir = Math.cos(frame * 0.05) > 0 ? 1 : -1;
+        drawDylan(runX, runY, runDir, true);
+
+        // Text (Top of Screen)
+        drawOutlinedText("FREEDOM!", 400, 100, 50, "center", "#FFD700");
+        drawOutlinedText("Dylan is free in the garden!", 400, 150, 24, "center", "white");
+    }
+
+    function drawLoseScene() {
+        // Background: Purple Gradient
+        let grad = ctx.createLinearGradient(0, 0, 0, 600);
+        grad.addColorStop(0, "#4B0082"); // Indigo (Dark)
+        grad.addColorStop(0.5, "#8A2BE2"); // BlueViolet (Lighter)
+        grad.addColorStop(1, "#4B0082"); // Indigo
+        ctx.fillStyle = grad;
+        ctx.fillRect(0,0, canvas.width, canvas.height);
+
+        drawMelissa(300, 300, 1, true); 
+        drawRealSock(360, 350, "red", "white");
+        drawRealSock(370, 340, "blue", "white");
+        drawRealSock(380, 355, "green", "white");
+        drawDylan(500, 320, -1, false);
+
+        drawOutlinedText("CAUGHT!", 400, 150, 50, "center", "#FF4500");
+        drawOutlinedText('"No Dylan, these socks are for Dobby!"', 400, 220, 28, "center", "white");
+        drawOutlinedText("(Melissa took them all away)", 400, 500, 20, "center", "#ccc");
+    }
+
+    function loop() {
+        update();
+        draw();
+        if(gameState === 'PLAYING' || gameState === 'WON' || gameState === 'LOST') {
+            requestAnimationFrame(loop);
+        }
+    }
+
+</script>
+</body>
+</html>
