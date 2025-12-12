@@ -1,35 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dylan's Sock Quest: Final Gift Edition</title>
+    <title>Dylan's Sock Quest: Mobile Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body {
-            background-color: #111; /* Dark background outside game */
+            background-color: #111;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
             font-family: 'Verdana', sans-serif;
-            overflow: hidden;
+            overflow: hidden; /* Prevent scrolling */
             flex-direction: column;
             color: white;
-        }
-        #gameContainer {
-            position: relative;
-            box-shadow: 0 0 50px rgba(138, 43, 226, 0.5); /* Purple glow */
-            border: 5px solid #8A2BE2; /* Purple border */
-            border-radius: 12px;
-            overflow: hidden;
-            width: 800px;
-            height: 600px;
-            background-color: #000;
-        }
-        canvas {
-            display: block;
+            touch-action: none; /* Disable double-tap zoom */
         }
         
-        /* UI Overlays (Menus) */
+        #gameContainer {
+            position: relative;
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
+            border: 4px solid #8A2BE2;
+            border-radius: 12px;
+            overflow: hidden;
+            /* Responsive Scaling */
+            width: 800px;
+            height: 600px;
+            max-width: 100%;
+            max-height: 100vh;
+            background-color: #000;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* UI Overlays */
         #startScreen, #endScreenControls {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -37,17 +46,19 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: rgba(17, 17, 17, 0.95); /* Dark opaque background for start */
+            background: rgba(17, 17, 17, 0.95);
             z-index: 20;
             text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         #endScreenControls { 
             display: none; 
             pointer-events: none; 
-            justify-content: flex-end; /* Push button to bottom */
-            padding-bottom: 50px; /* Space from bottom */
-            background: transparent; /* Transparent so we see the canvas graphic */
+            justify-content: flex-end; 
+            padding-bottom: 80px; /* Space for controls */
+            background: transparent; 
         }
         
         #endScreenControls button { 
@@ -55,57 +66,79 @@
             box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
 
-        /* Typography & Colors for UI */
+        /* Typography */
         h1 { 
-            margin: 0 0 10px 0; font-size: 50px; 
-            color: #dcf7e6; /* Light Mint */
-            text-shadow: 2px 2px 0px #8A2BE2; /* Purple Shadow */
-            letter-spacing: 3px; 
+            margin: 0 0 10px 0; font-size: 8vw; /* Scales with screen */
+            color: #dcf7e6; 
+            text-shadow: 2px 2px 0px #8A2BE2; 
+            letter-spacing: 2px; 
             text-transform: uppercase;
         }
-        h2 { font-size: 24px; color: #8A2BE2; margin: 0 0 20px 0; } /* Purple */
-        p { font-size: 20px; color: #fff; margin: 5px 0; }
+        @media (min-width: 800px) { h1 { font-size: 50px; } }
+
+        h2 { font-size: 20px; color: #8A2BE2; margin: 0 0 20px 0; }
+        p { font-size: 16px; color: #fff; margin: 5px 0; }
         
-        /* Buttons */
         button {
-            padding: 15px 50px;
-            font-size: 22px;
-            background-color: #8A2BE2; /* Purple */
+            padding: 15px 40px;
+            font-size: 20px;
+            background-color: #8A2BE2; 
             color: white;
             border: 3px solid #fff;
             border-radius: 30px;
             cursor: pointer; 
             font-weight: bold;
-            margin-top: 30px;
+            margin-top: 20px;
             font-family: 'Verdana', sans-serif;
-            transition: transform 0.1s, background-color 0.2s;
         }
-        button:hover { background-color: #9932CC; border-color: #dcf7e6; }
         button:active { transform: scale(0.95); }
 
-        /* In-Game Heads Up Display */
-        #inGameUI {
+        /* --- MOBILE CONTROLS --- */
+        #mobileControls {
             position: absolute;
-            top: 15px; left: 20px;
-            color: white; 
-            font-size: 24px;
-            font-weight: bold;
-            pointer-events: none;
-            text-shadow: 
-                -1px -1px 0 #000, 1px -1px 0 #000,
-                -1px  1px 0 #000, 1px  1px 0 #000;
+            bottom: 20px;
+            right: 20px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.8;
+            /* Prevent selecting text while playing */
+            user-select: none;
+            -webkit-user-select: none;
         }
+
+        .control-row { display: flex; gap: 10px; }
         
+        .d-btn {
+            width: 60px; height: 60px;
+            background: rgba(138, 43, 226, 0.4); /* See-through purple */
+            border: 2px solid white;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            touch-action: manipulation;
+            margin: 5px;
+            font-weight: bold;
+        }
+        .d-btn:active { background: rgba(138, 43, 226, 0.9); transform: scale(0.9); }
+
+        /* Game Text */
         #statusMsg { 
             position: absolute; bottom: 20px; width: 100%; 
-            text-align: center; font-size: 40px; 
-            font-weight: bold;
-            color: white; 
-            text-shadow: 
-                -2px -2px 0 #000, 2px -2px 0 #000,
-                -2px  2px 0 #000, 2px  2px 0 #000;
-            pointer-events: none;
-            z-index: 15;
+            text-align: center; font-size: 24px; 
+            font-weight: bold; color: white; 
+            text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+            pointer-events: none; z-index: 15;
+        }
+        #inGameUI {
+            position: absolute; top: 15px; left: 20px;
+            color: white; font-size: 20px; font-weight: bold; pointer-events: none;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
         }
 
     </style>
@@ -118,16 +151,26 @@
     <div id="inGameUI" style="display:none;">Socks: <span id="scoreSpan">0</span> / 15</div>
     <div id="statusMsg" style="display:none;"></div>
 
+    <div id="mobileControls" style="display:none;">
+        <div class="d-btn" id="btnUp">↑</div>
+        <div class="control-row">
+            <div class="d-btn" id="btnLeft">←</div>
+            <div class="d-btn" id="btnDown">↓</div>
+            <div class="d-btn" id="btnRight">→</div>
+        </div>
+    </div>
+
     <div id="startScreen">
         <h1>DYLAN'S SOCK QUEST</h1>
-        <h2>Wizard Edition</h2>
-        <p>Collect all 15 socks to unlock the door.</p>
-        <p>You have 3 seconds before Melissa arrives!</p>
+        <h2>Mobile Wizard Edition</h2>
+        <p>Collect all 15 socks.</p>
+        <p>Run to the door before Melissa arrives!</p>
+        <p style="font-size:14px; color:#aaa; margin-top:10px;">(Use Arrow Keys or On-Screen Buttons)</p>
         <button onclick="startGame()">START GAME</button>
     </div>
 
     <div id="endScreenControls">
-        <button id="restartBtn" onclick="resetGame()">TRY AGAIN</button>
+        <button onclick="resetGame()">TRY AGAIN</button>
     </div>
 </div>
 
@@ -139,14 +182,15 @@
     const inGameUI = document.getElementById('inGameUI');
     const statusMsg = document.getElementById('statusMsg');
     const scoreSpan = document.getElementById('scoreSpan');
+    const mobileControls = document.getElementById('mobileControls');
 
     // --- Game Settings ---
     let frame = 0;
     let gameState = 'START'; 
     let socksCollected = 0;
-    const socksNeeded = 15; // INCREASED TO 15
+    const socksNeeded = 15; 
     let startTime;
-    const headStartDuration = 3000; // 3 SECONDS
+    const headStartDuration = 3000; 
 
     // --- Objects ---
     let dylan = { x: 400, y: 400, w: 60, h: 40, speed: 6, dirX: 1, isMoving: false };
@@ -154,16 +198,40 @@
     const door = { x: 350, y: 60, w: 100, h: 120 }; 
     let socks = [];
 
-    // --- Inputs ---
+    // --- Input Handling (Keyboard & Touch) ---
     const keys = {};
+    
+    // Keyboard
     window.addEventListener('keydown', e => keys[e.key] = true);
     window.addEventListener('keyup', e => keys[e.key] = false);
+
+    // Touch Buttons Helper
+    function setupTouchButton(id, keyName) {
+        const btn = document.getElementById(id);
+        const setKey = (state) => { keys[keyName] = state; };
+        
+        // Touch events (Mobile)
+        btn.addEventListener('touchstart', (e) => { e.preventDefault(); setKey(true); });
+        btn.addEventListener('touchend', (e) => { e.preventDefault(); setKey(false); });
+        
+        // Mouse events (Desktop click testing)
+        btn.addEventListener('mousedown', (e) => { e.preventDefault(); setKey(true); });
+        btn.addEventListener('mouseup', (e) => { e.preventDefault(); setKey(false); });
+        btn.addEventListener('mouseleave', (e) => { setKey(false); });
+    }
+
+    setupTouchButton('btnUp', 'ArrowUp');
+    setupTouchButton('btnDown', 'ArrowDown');
+    setupTouchButton('btnLeft', 'ArrowLeft');
+    setupTouchButton('btnRight', 'ArrowRight');
+
 
     // --- Core Functions ---
     function startGame() {
         startScreen.style.display = 'none';
         inGameUI.style.display = 'block';
         statusMsg.style.display = 'block';
+        mobileControls.style.display = 'flex'; // Show controls
         resetGame();
         loop();
     }
@@ -179,7 +247,6 @@
         melissa.x = -150; melissa.y = 400;
         statusMsg.innerText = "";
         
-        // Spawn EXACTLY 15 Socks
         socks = [];
         for(let i=0; i<socksNeeded; i++) {
             socks.push({
@@ -206,37 +273,31 @@
 
     // --- Drawing The World ---
     function drawEnvironment() {
-        // Wall (LIGHTER MINT GREEN)
-        ctx.fillStyle = "#dcf7e6"; // Updated color
+        // Wall
+        ctx.fillStyle = "#dcf7e6"; 
         ctx.fillRect(0,0, canvas.width, 200);
         
-        // Floor (Wood Brown)
+        // Floor
         let floorGrad = ctx.createLinearGradient(0, 200, 0, 600);
-        floorGrad.addColorStop(0, "#d2b48c"); // Tan
-        floorGrad.addColorStop(1, "#8b4513"); // Saddle Brown
+        floorGrad.addColorStop(0, "#d2b48c"); 
+        floorGrad.addColorStop(1, "#8b4513"); 
         ctx.fillStyle = floorGrad;
         ctx.fillRect(0, 200, canvas.width, 400);
         
-        // Floorboards lines
+        // Floorboards
         ctx.strokeStyle = "rgba(0,0,0,0.1)";
         ctx.lineWidth = 2;
         for(let i=0; i<canvas.width; i+= 80) {
             ctx.beginPath(); ctx.moveTo(i, 200); ctx.lineTo(i-150, 600); ctx.stroke();
         }
 
-        // Draw Door
+        // Door
         ctx.fillStyle = (socksCollected >= socksNeeded) ? "#fff" : "#333"; 
         ctx.fillRect(door.x, door.y, door.w, door.h);
-        
-        // Door Frame
         ctx.strokeStyle = "#4a3020"; ctx.lineWidth = 6;
         ctx.strokeRect(door.x-3, door.y-3, door.w+6, door.h+6);
-        
-        // Doggy Flap
         ctx.fillStyle = "#111"; 
         ctx.fillRect(door.x+10, door.y+70, door.w-20, 50);
-        
-        // Label
         drawOutlinedText("DOGGY DOOR", door.x + door.w/2, door.y - 15, 16, "center", "white");
     }
 
@@ -267,7 +328,7 @@
         let moveBounce = dylan.isMoving ? Math.sin(frame * 0.4) * 3 : 0;
         let legMove = dylan.isMoving ? Math.sin(frame * 0.4) * 10 : 0;
 
-        // Legs (4)
+        // Legs
         ctx.fillStyle = "#111"; 
         ctx.fillRect(-20 + legMove, 15, 8, 25); // BL
         ctx.fillRect(10 - legMove, 15, 8, 25);  // FL
@@ -358,7 +419,7 @@
         ctx.restore();
     }
 
-    // --- Game Logic ---
+    // --- Logic Loop ---
     function update() {
         if (gameState !== 'PLAYING') return;
         frame++;
@@ -366,7 +427,6 @@
         let elapsed = Date.now() - startTime;
         let remainingHeadStart = Math.ceil((headStartDuration - elapsed) / 1000);
 
-        // UI Updates - Countdown
         if (remainingHeadStart > 0) {
             statusMsg.innerText = `Melissa enters in: ${remainingHeadStart}`;
             statusMsg.style.color = "white";
@@ -389,7 +449,6 @@
             let dx = dylan.x - melissa.x;
             let dy = dylan.y - melissa.y;
             let dist = Math.sqrt(dx*dx + dy*dy);
-            
             if (dist > 10) {
                 melissa.x += (dx/dist) * melissa.speed;
                 melissa.y += (dy/dist) * melissa.speed;
@@ -423,6 +482,7 @@
 
     function endGame() {
         endScreenControls.style.display = 'flex'; 
+        mobileControls.style.display = 'none'; // Hide controls on end screen
         statusMsg.innerText = "";
     }
 
@@ -437,7 +497,6 @@
 
         drawEnvironment();
         socks.forEach(s => drawRealSock(s.x, s.y, s.color1, s.color2));
-        
         drawDylan(dylan.x, dylan.y, dylan.dirX, socksCollected > 0);
         
         let elapsed = Date.now() - startTime;
@@ -446,7 +505,7 @@
         }
     }
 
-    // --- Scene Helpers ---
+    // --- Scenes ---
     function drawTree(x, y) {
         ctx.fillStyle = "#8B4513"; ctx.fillRect(x, y, 20, 60);
         ctx.fillStyle = "#228B22"; 
@@ -465,46 +524,29 @@
 
     function drawWinScene() {
         frame++;
-        
-        // Background: Purple Gradient (Light enough to see black dog)
         let grad = ctx.createLinearGradient(0, 0, 0, 600);
-        grad.addColorStop(0, "#9370DB"); // Medium Purple
-        grad.addColorStop(0.5, "#E6E6FA"); // Lavender (Light)
-        grad.addColorStop(1, "#9370DB"); // Medium Purple
-        ctx.fillStyle = grad;
-        ctx.fillRect(0,0, canvas.width, canvas.height);
+        grad.addColorStop(0, "#9370DB"); grad.addColorStop(0.5, "#E6E6FA"); grad.addColorStop(1, "#9370DB"); 
+        ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
         
-        // Grass Patch for garden feel
         ctx.fillStyle = "#32CD32"; ctx.fillRect(0, 300, canvas.width, 300);
+        drawShed(50, 350); drawTree(650, 350); drawTree(720, 380); drawTree(580, 400);
 
-        // Scenery
-        drawShed(50, 350);
-        drawTree(650, 350); drawTree(720, 380); drawTree(580, 400);
-
-        // Dylan Running
         let runX = 400 + Math.sin(frame * 0.05) * 300;
         let runY = 400 + Math.cos(frame * 0.07) * 50; 
         let runDir = Math.cos(frame * 0.05) > 0 ? 1 : -1;
         drawDylan(runX, runY, runDir, true);
 
-        // Text (Top of Screen)
         drawOutlinedText("FREEDOM!", 400, 100, 50, "center", "#FFD700");
         drawOutlinedText("Dylan is free in the garden!", 400, 150, 24, "center", "white");
     }
 
     function drawLoseScene() {
-        // Background: Purple Gradient
         let grad = ctx.createLinearGradient(0, 0, 0, 600);
-        grad.addColorStop(0, "#4B0082"); // Indigo (Dark)
-        grad.addColorStop(0.5, "#8A2BE2"); // BlueViolet (Lighter)
-        grad.addColorStop(1, "#4B0082"); // Indigo
-        ctx.fillStyle = grad;
-        ctx.fillRect(0,0, canvas.width, canvas.height);
+        grad.addColorStop(0, "#4B0082"); grad.addColorStop(0.5, "#8A2BE2"); grad.addColorStop(1, "#4B0082"); 
+        ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
 
         drawMelissa(300, 300, 1, true); 
-        drawRealSock(360, 350, "red", "white");
-        drawRealSock(370, 340, "blue", "white");
-        drawRealSock(380, 355, "green", "white");
+        drawRealSock(360, 350, "red", "white"); drawRealSock(370, 340, "blue", "white"); drawRealSock(380, 355, "green", "white");
         drawDylan(500, 320, -1, false);
 
         drawOutlinedText("CAUGHT!", 400, 150, 50, "center", "#FF4500");
