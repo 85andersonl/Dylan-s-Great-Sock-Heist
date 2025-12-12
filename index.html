@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dylan's Sock Quest: Mobile Edition</title>
+    <title>Dylan's Sock Quest: Turbo Edition</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body {
@@ -12,24 +12,21 @@
             height: 100vh;
             margin: 0;
             font-family: 'Verdana', sans-serif;
-            overflow: hidden; /* Prevent scrolling */
+            overflow: hidden;
             flex-direction: column;
             color: white;
-            touch-action: none; /* Disable double-tap zoom */
+            touch-action: none; 
         }
         
+        /* The Game Box - Keeps Aspect Ratio */
         #gameContainer {
             position: relative;
             box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
             border: 4px solid #8A2BE2;
             border-radius: 12px;
             overflow: hidden;
-            /* Responsive Scaling */
-            width: 800px;
-            height: 600px;
-            max-width: 100%;
-            max-height: 100vh;
             background-color: #000;
+            /* Dimensions are set by JS to prevent warping */
         }
 
         canvas {
@@ -57,7 +54,7 @@
             display: none; 
             pointer-events: none; 
             justify-content: flex-end; 
-            padding-bottom: 80px; /* Space for controls */
+            padding-bottom: 90px; /* Space for controls */
             background: transparent; 
         }
         
@@ -68,15 +65,16 @@
 
         /* Typography */
         h1 { 
-            margin: 0 0 10px 0; font-size: 8vw; /* Scales with screen */
+            margin: 0 0 10px 0; font-size: 30px; 
             color: #dcf7e6; 
             text-shadow: 2px 2px 0px #8A2BE2; 
             letter-spacing: 2px; 
             text-transform: uppercase;
         }
-        @media (min-width: 800px) { h1 { font-size: 50px; } }
+        /* Make text bigger on big screens */
+        @media (min-width: 600px) { h1 { font-size: 50px; } }
 
-        h2 { font-size: 20px; color: #8A2BE2; margin: 0 0 20px 0; }
+        h2 { font-size: 18px; color: #8A2BE2; margin: 0 0 20px 0; }
         p { font-size: 16px; color: #fff; margin: 5px 0; }
         
         button {
@@ -90,20 +88,20 @@
             font-weight: bold;
             margin-top: 20px;
             font-family: 'Verdana', sans-serif;
+            transition: transform 0.1s;
         }
         button:active { transform: scale(0.95); }
 
         /* --- MOBILE CONTROLS --- */
         #mobileControls {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
+            bottom: 15px;
+            right: 15px;
             z-index: 50;
             display: flex;
             flex-direction: column;
             align-items: center;
             opacity: 0.8;
-            /* Prevent selecting text while playing */
             user-select: none;
             -webkit-user-select: none;
         }
@@ -111,8 +109,8 @@
         .control-row { display: flex; gap: 10px; }
         
         .d-btn {
-            width: 60px; height: 60px;
-            background: rgba(138, 43, 226, 0.4); /* See-through purple */
+            width: 55px; height: 55px;
+            background: rgba(138, 43, 226, 0.4); 
             border: 2px solid white;
             border-radius: 50%;
             color: white;
@@ -121,24 +119,24 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            touch-action: manipulation;
+            touch-action: manipulation; /* Improves touch response */
             margin: 5px;
             font-weight: bold;
         }
-        .d-btn:active { background: rgba(138, 43, 226, 0.9); transform: scale(0.9); }
+        .d-btn:active { background: rgba(138, 43, 226, 0.9); transform: scale(0.95); }
 
-        /* Game Text */
+        /* Status Text */
         #statusMsg { 
             position: absolute; bottom: 20px; width: 100%; 
-            text-align: center; font-size: 24px; 
+            text-align: center; font-size: 20px; 
             font-weight: bold; color: white; 
-            text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+            text-shadow: -2px -2px 0 #000, 2px -2px 0 #000;
             pointer-events: none; z-index: 15;
         }
         #inGameUI {
-            position: absolute; top: 15px; left: 20px;
-            color: white; font-size: 20px; font-weight: bold; pointer-events: none;
-            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+            position: absolute; top: 10px; left: 10px;
+            color: white; font-size: 18px; font-weight: bold; pointer-events: none;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000;
         }
 
     </style>
@@ -162,10 +160,10 @@
 
     <div id="startScreen">
         <h1>DYLAN'S SOCK QUEST</h1>
-        <h2>Mobile Wizard Edition</h2>
-        <p>Collect all 15 socks.</p>
-        <p>Run to the door before Melissa arrives!</p>
-        <p style="font-size:14px; color:#aaa; margin-top:10px;">(Use Arrow Keys or On-Screen Buttons)</p>
+        <h2>Mobile Turbo Edition</h2>
+        <p>Collect 15 socks to unlock the door.</p>
+        <p>Run to the garden before Melissa arrives!</p>
+        <p style="color:#dcf7e6; margin-top:10px; font-size: 14px;"><strong>TIP:</strong> Hold direction for 2s to SPRINT!</p>
         <button onclick="startGame()">START GAME</button>
     </div>
 
@@ -175,6 +173,7 @@
 </div>
 
 <script>
+    const container = document.getElementById('gameContainer');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const startScreen = document.getElementById('startScreen');
@@ -184,40 +183,91 @@
     const scoreSpan = document.getElementById('scoreSpan');
     const mobileControls = document.getElementById('mobileControls');
 
-    // --- Game Settings ---
+    // --- Screen Resizing Logic (Fixes Warping) ---
+    function resizeGame() {
+        const targetRatio = 800 / 600; // 4:3 Aspect Ratio
+        const windowRatio = window.innerWidth / window.innerHeight;
+        
+        let finalWidth, finalHeight;
+
+        if (windowRatio > targetRatio) {
+            // Screen is wider than game -> Fit by height
+            finalHeight = window.innerHeight * 0.95; 
+            finalWidth = finalHeight * targetRatio;
+        } else {
+            // Screen is taller than game -> Fit by width
+            finalWidth = window.innerWidth * 0.95;
+            finalHeight = finalWidth / targetRatio;
+        }
+
+        container.style.width = `${finalWidth}px`;
+        container.style.height = `${finalHeight}px`;
+    }
+    
+    window.addEventListener('resize', resizeGame);
+    resizeGame(); // Call immediately
+
+    // --- Game Variables ---
     let frame = 0;
     let gameState = 'START'; 
     let socksCollected = 0;
     const socksNeeded = 15; 
     let startTime;
     const headStartDuration = 3000; 
+    
+    // Turbo Boost Variables
+    let moveStartTime = 0; 
+    let isSprinting = false;
 
     // --- Objects ---
-    let dylan = { x: 400, y: 400, w: 60, h: 40, speed: 6, dirX: 1, isMoving: false };
+    let dylan = { x: 400, y: 400, w: 60, h: 40, baseSpeed: 6, speed: 6, dirX: 1, isMoving: false };
     let melissa = { x: -100, y: 400, w: 50, h: 110, speed: 3.5, dirX: 1 };
     const door = { x: 350, y: 60, w: 100, h: 120 }; 
     let socks = [];
 
-    // --- Input Handling (Keyboard & Touch) ---
+    // --- Input Handling ---
     const keys = {};
     
-    // Keyboard
-    window.addEventListener('keydown', e => keys[e.key] = true);
-    window.addEventListener('keyup', e => keys[e.key] = false);
+    window.addEventListener('keydown', e => {
+        if (!keys[e.key]) moveStartTime = Date.now(); // Start timer on fresh press
+        keys[e.key] = true;
+    });
+    
+    window.addEventListener('keyup', e => {
+        keys[e.key] = false;
+        // If no keys pressed, reset turbo timer
+        if (!keys['ArrowUp'] && !keys['ArrowDown'] && !keys['ArrowLeft'] && !keys['ArrowRight']) {
+            moveStartTime = 0;
+            isSprinting = false;
+        }
+    });
 
-    // Touch Buttons Helper
+    // Touch Button Logic
     function setupTouchButton(id, keyName) {
         const btn = document.getElementById(id);
-        const setKey = (state) => { keys[keyName] = state; };
         
-        // Touch events (Mobile)
-        btn.addEventListener('touchstart', (e) => { e.preventDefault(); setKey(true); });
-        btn.addEventListener('touchend', (e) => { e.preventDefault(); setKey(false); });
+        const press = (e) => { 
+            e.preventDefault(); 
+            if (!keys[keyName]) moveStartTime = Date.now();
+            keys[keyName] = true; 
+        };
+        const release = (e) => { 
+            e.preventDefault(); 
+            keys[keyName] = false;
+            // Check if ANY other button is held, if not reset timer
+            setTimeout(() => {
+                if(!keys['ArrowUp'] && !keys['ArrowDown'] && !keys['ArrowLeft'] && !keys['ArrowRight']) {
+                    moveStartTime = 0;
+                    isSprinting = false;
+                }
+            }, 10);
+        };
         
-        // Mouse events (Desktop click testing)
-        btn.addEventListener('mousedown', (e) => { e.preventDefault(); setKey(true); });
-        btn.addEventListener('mouseup', (e) => { e.preventDefault(); setKey(false); });
-        btn.addEventListener('mouseleave', (e) => { setKey(false); });
+        btn.addEventListener('touchstart', press);
+        btn.addEventListener('touchend', release);
+        btn.addEventListener('mousedown', press);
+        btn.addEventListener('mouseup', release);
+        btn.addEventListener('mouseleave', release);
     }
 
     setupTouchButton('btnUp', 'ArrowUp');
@@ -225,13 +275,12 @@
     setupTouchButton('btnLeft', 'ArrowLeft');
     setupTouchButton('btnRight', 'ArrowRight');
 
-
     // --- Core Functions ---
     function startGame() {
         startScreen.style.display = 'none';
         inGameUI.style.display = 'block';
         statusMsg.style.display = 'block';
-        mobileControls.style.display = 'flex'; // Show controls
+        mobileControls.style.display = 'flex'; // Show Arrows
         resetGame();
         loop();
     }
@@ -239,10 +288,14 @@
     function resetGame() {
         gameState = 'PLAYING';
         endScreenControls.style.display = 'none';
+        mobileControls.style.display = 'flex'; // ENSURE ARROWS COME BACK
+        
         socksCollected = 0;
         scoreSpan.innerText = 0;
         frame = 0;
         startTime = Date.now();
+        moveStartTime = 0; // Reset turbo
+        
         dylan.x = 400; dylan.y = 400;
         melissa.x = -150; melissa.y = 400;
         statusMsg.innerText = "";
@@ -258,35 +311,17 @@
         }
     }
 
-    // --- Helper: Draw Text with Outline ---
-    function drawOutlinedText(text, x, y, fontSize, align = "center", color = "white") {
-        ctx.font = `bold ${fontSize}px Verdana`;
-        ctx.textAlign = align;
-        ctx.lineJoin = "round";
-        ctx.miterLimit = 2;
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 4;
-        ctx.strokeText(text, x, y);
-        ctx.fillStyle = color;
-        ctx.fillText(text, x, y);
-    }
-
-    // --- Drawing The World ---
+    // --- Drawing ---
     function drawEnvironment() {
-        // Wall
-        ctx.fillStyle = "#dcf7e6"; 
-        ctx.fillRect(0,0, canvas.width, 200);
-        
-        // Floor
+        // Wall (Mint)
+        ctx.fillStyle = "#dcf7e6"; ctx.fillRect(0,0, canvas.width, 200);
+        // Floor (Wood)
         let floorGrad = ctx.createLinearGradient(0, 200, 0, 600);
-        floorGrad.addColorStop(0, "#d2b48c"); 
-        floorGrad.addColorStop(1, "#8b4513"); 
-        ctx.fillStyle = floorGrad;
-        ctx.fillRect(0, 200, canvas.width, 400);
+        floorGrad.addColorStop(0, "#d2b48c"); floorGrad.addColorStop(1, "#8b4513"); 
+        ctx.fillStyle = floorGrad; ctx.fillRect(0, 200, canvas.width, 400);
         
         // Floorboards
-        ctx.strokeStyle = "rgba(0,0,0,0.1)";
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.lineWidth = 2;
         for(let i=0; i<canvas.width; i+= 80) {
             ctx.beginPath(); ctx.moveTo(i, 200); ctx.lineTo(i-150, 600); ctx.stroke();
         }
@@ -296,272 +331,9 @@
         ctx.fillRect(door.x, door.y, door.w, door.h);
         ctx.strokeStyle = "#4a3020"; ctx.lineWidth = 6;
         ctx.strokeRect(door.x-3, door.y-3, door.w+6, door.h+6);
-        ctx.fillStyle = "#111"; 
-        ctx.fillRect(door.x+10, door.y+70, door.w-20, 50);
-        drawOutlinedText("DOGGY DOOR", door.x + door.w/2, door.y - 15, 16, "center", "white");
-    }
-
-    // --- Drawing Assets ---
-    function drawRealSock(x, y, c1, c2) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.fillStyle = c1;
-        ctx.beginPath();
-        ctx.moveTo(0, 0); ctx.lineTo(0, 20); 
-        ctx.bezierCurveTo(0, 30, 10, 30, 15, 25); 
-        ctx.lineTo(25, 25); 
-        ctx.bezierCurveTo(30, 25, 30, 15, 25, 15); 
-        ctx.lineTo(10, 15); ctx.lineTo(10, 0); ctx.fill();
-        ctx.fillStyle = c2;
-        ctx.beginPath();
-        ctx.moveTo(25, 15); ctx.bezierCurveTo(30, 15, 30, 25, 25, 25);
-        ctx.lineTo(20, 25); ctx.lineTo(20, 15); ctx.fill();
-        ctx.fillStyle = c2; ctx.fillRect(0, 0, 10, 5);
-        ctx.restore();
-    }
-
-    function drawDylan(x, y, dir, hasSocks) {
-        ctx.save();
-        ctx.translate(x + dylan.w/2, y + dylan.h/2);
-        if (dir === -1) ctx.scale(-1, 1);
-
-        let moveBounce = dylan.isMoving ? Math.sin(frame * 0.4) * 3 : 0;
-        let legMove = dylan.isMoving ? Math.sin(frame * 0.4) * 10 : 0;
-
-        // Legs
-        ctx.fillStyle = "#111"; 
-        ctx.fillRect(-20 + legMove, 15, 8, 25); // BL
-        ctx.fillRect(10 - legMove, 15, 8, 25);  // FL
-        ctx.fillRect(-25 - legMove, 18, 8, 25); // BR
-        ctx.fillRect(15 + legMove, 18, 8, 25);  // FR
-
-        // Tail
-        let tailWag = Math.sin(frame * 0.5) * 15;
-        ctx.strokeStyle = "#111"; ctx.lineWidth = 8; ctx.lineCap = "round";
-        ctx.beginPath(); ctx.moveTo(-25, 5); ctx.quadraticCurveTo(-45, -5 + tailWag, -55, 0 + tailWag); ctx.stroke();
-        ctx.strokeStyle = "white"; ctx.lineWidth = 6; 
-        ctx.beginPath(); ctx.moveTo(-50, -2 + tailWag); ctx.lineTo(-55, 0 + tailWag); ctx.stroke();
-
-        // Body
-        ctx.fillStyle = "#111"; 
-        ctx.beginPath(); ctx.ellipse(0, 5 + moveBounce, 35, 22, 0, 0, Math.PI * 2); ctx.fill();
-
-        // White Chest
-        ctx.fillStyle = "white";
-        ctx.beginPath(); 
-        ctx.moveTo(0, 10 + moveBounce); ctx.lineTo(20, 10 + moveBounce); 
-        ctx.lineTo(15, 25 + moveBounce); ctx.lineTo(5, 28 + moveBounce); ctx.fill();
-
-        // Head
-        ctx.fillStyle = "#111"; 
-        ctx.beginPath(); ctx.arc(25, -10 + moveBounce, 18, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(20, -18 + moveBounce, 8, 14, -0.5, 0, Math.PI * 2); ctx.fill(); 
-
-        // Face
-        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(28, -14 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
-        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(29, -14 + moveBounce, 1.5, 0, Math.PI * 2); ctx.fill(); 
-
-        if (hasSocks) {
-            ctx.fillStyle = socks[0] ? socks[0].color1 : "#FF69B4";
-            ctx.beginPath(); ctx.arc(35, -5 + moveBounce, 8, 0, Math.PI*2); ctx.fill();
-        } else {
-             ctx.fillStyle = "pink";
-             ctx.beginPath(); ctx.ellipse(32, -5+moveBounce, 4, 6, 0.5, 0, Math.PI*2); ctx.fill();
-        }
-        ctx.restore();
-    }
-
-    function drawMelissa(x, y, dir, isAngry) {
-        ctx.save();
-        ctx.translate(x + melissa.w/2, y + melissa.h/2);
-        if (dir === -1) ctx.scale(-1, 1);
-
-        let sway = isAngry ? 0 : Math.sin(frame * 0.1) * 2;
-        let hairFlow = isAngry ? 0 : Math.sin(frame * 0.15) * 5;
-
-        // Hair
-        ctx.fillStyle = "#8A2BE2"; 
-        ctx.beginPath(); ctx.moveTo(0, -50); 
-        ctx.bezierCurveTo(-50, -20, -60 + hairFlow, 20, -40 + hairFlow, 60); ctx.lineTo(15, -30); ctx.fill();
-        ctx.fillStyle = "#111"; 
-        ctx.beginPath(); ctx.moveTo(0, -50); 
-        ctx.bezierCurveTo(-45, -20, -55 + hairFlow, 10, -35 + hairFlow, 50); ctx.lineTo(15, -30); ctx.fill();
-
-        // Robe
-        ctx.fillStyle = "#1a1a1a"; 
-        ctx.beginPath(); ctx.moveTo(5, -30); ctx.lineTo(-25, 55); ctx.lineTo(25, 55); ctx.lineTo(15, -30); ctx.fill();
-        ctx.fillStyle = "#8b0000"; ctx.fillRect(-15, -25, 6, 80); ctx.fillRect(15, -25, 6, 80);
-
-        // Head
-        ctx.fillStyle = "#ffccaa"; ctx.beginPath(); ctx.arc(5, -35 + sway, 13, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(10, -35 + sway, 2, 0, Math.PI*2); ctx.fill();
-
-        // Hat
-        ctx.save(); ctx.translate(2, -45 + sway); ctx.rotate(-0.1);
-        ctx.fillStyle = "#111"; ctx.beginPath(); ctx.ellipse(0, 0, 28, 6, 0, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(0, -50); ctx.lineTo(18, 0); ctx.fill();
-        ctx.fillStyle = "#8A2BE2"; ctx.fillRect(-14, -8, 28, 5);
-        ctx.restore();
-
-        // Arms
-        if (isAngry) {
-            ctx.strokeStyle = "#ffccaa"; ctx.lineWidth = 4;
-            ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(-15, 10); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(10, -10); ctx.lineTo(25, 10); ctx.stroke();
-        } else {
-            ctx.strokeStyle = "#ffccaa"; ctx.lineWidth = 4;
-            ctx.beginPath(); ctx.moveTo(10, -10); ctx.lineTo(25, 0); ctx.stroke();
-            ctx.strokeStyle = "#5C4033"; ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.moveTo(25, 0); ctx.lineTo(45, -5); ctx.stroke();
-            ctx.fillStyle = "#00ffff"; 
-            ctx.beginPath(); ctx.arc(45, -5, Math.random()*4+2, 0, Math.PI*2); ctx.fill();
-        }
-        ctx.restore();
-    }
-
-    // --- Logic Loop ---
-    function update() {
-        if (gameState !== 'PLAYING') return;
-        frame++;
-
-        let elapsed = Date.now() - startTime;
-        let remainingHeadStart = Math.ceil((headStartDuration - elapsed) / 1000);
-
-        if (remainingHeadStart > 0) {
-            statusMsg.innerText = `Melissa enters in: ${remainingHeadStart}`;
-            statusMsg.style.color = "white";
-        } else if (remainingHeadStart <= 0 && melissa.x < -50) {
-             statusMsg.innerText = "MELISSA IS HERE! RUN!"; 
-             statusMsg.style.color = "#FF1493"; 
-        } else if (socksCollected < socksNeeded) {
-             statusMsg.innerText = ""; 
-        }
-
-        // Dylan Movement
-        dylan.isMoving = false;
-        if (keys['ArrowUp'] && dylan.y > 180) { dylan.y -= dylan.speed; dylan.isMoving = true; }
-        if (keys['ArrowDown'] && dylan.y + dylan.h < 600) { dylan.y += dylan.speed; dylan.isMoving = true; }
-        if (keys['ArrowLeft'] && dylan.x > 0) { dylan.x -= dylan.speed; dylan.dirX = -1; dylan.isMoving = true; }
-        if (keys['ArrowRight'] && dylan.x + dylan.w < 800) { dylan.x += dylan.speed; dylan.dirX = 1; dylan.isMoving = true; }
-
-        // Melissa AI
-        if (remainingHeadStart <= 0) {
-            let dx = dylan.x - melissa.x;
-            let dy = dylan.y - melissa.y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist > 10) {
-                melissa.x += (dx/dist) * melissa.speed;
-                melissa.y += (dy/dist) * melissa.speed;
-                melissa.dirX = dx > 0 ? 1 : -1;
-            }
-            if (dist < 40) { gameState = 'LOST'; endGame(); }
-        }
-
-        // Collect Socks
-        for (let i = socks.length - 1; i >= 0; i--) {
-            let s = socks[i];
-            if (dylan.x < s.x + 30 && dylan.x + dylan.w > s.x && 
-                dylan.y < s.y + 30 && dylan.y + dylan.h > s.y) {
-                socks.splice(i, 1);
-                socksCollected++;
-                scoreSpan.innerText = socksCollected;
-                if (socksCollected >= socksNeeded) {
-                    statusMsg.innerText = "RUN TO THE DOGGY DOOR!";
-                    statusMsg.style.color = "#00FF00";
-                }
-            }
-        }
-
-        // Win
-        if (socksCollected >= socksNeeded) {
-            if (dylan.y < door.y + door.h && dylan.x > door.x - 20 && dylan.x < door.x + door.w + 20) {
-                gameState = 'WON'; endGame();
-            }
-        }
-    }
-
-    function endGame() {
-        endScreenControls.style.display = 'flex'; 
-        mobileControls.style.display = 'none'; // Hide controls on end screen
-        statusMsg.innerText = "";
-    }
-
-    // --- Draw Loop ---
-    function draw() {
-        if(gameState === 'START') return;
-
-        ctx.clearRect(0,0, canvas.width, canvas.height);
-
-        if (gameState === 'WON') { drawWinScene(); return; }
-        if (gameState === 'LOST') { drawLoseScene(); return; }
-
-        drawEnvironment();
-        socks.forEach(s => drawRealSock(s.x, s.y, s.color1, s.color2));
-        drawDylan(dylan.x, dylan.y, dylan.dirX, socksCollected > 0);
+        ctx.fillStyle = "#111"; ctx.fillRect(door.x+10, door.y+70, door.w-20, 50);
         
-        let elapsed = Date.now() - startTime;
-        if (elapsed > headStartDuration || melissa.x > -100) {
-             drawMelissa(melissa.x, melissa.y, melissa.dirX, false);
-        }
-    }
-
-    // --- Scenes ---
-    function drawTree(x, y) {
-        ctx.fillStyle = "#8B4513"; ctx.fillRect(x, y, 20, 60);
-        ctx.fillStyle = "#228B22"; 
-        ctx.beginPath(); ctx.arc(x+10, y-10, 30, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(x-10, y+10, 25, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(x+30, y+5, 25, 0, Math.PI*2); ctx.fill();
-    }
-
-    function drawShed(x, y) {
-        ctx.fillStyle = "#f0f0f0"; ctx.fillRect(x, y, 100, 80);
-        ctx.fillStyle = "#777"; 
-        ctx.beginPath(); ctx.moveTo(x-10, y); ctx.lineTo(x+50, y-40); ctx.lineTo(x+110, y); ctx.fill();
-        ctx.strokeStyle = "#ccc"; ctx.lineWidth=2; ctx.strokeRect(x+30, y+20, 40, 60);
-        ctx.fillStyle = "#aaa"; ctx.beginPath(); ctx.arc(x+65, y+50, 3, 0, Math.PI*2); ctx.fill();
-    }
-
-    function drawWinScene() {
-        frame++;
-        let grad = ctx.createLinearGradient(0, 0, 0, 600);
-        grad.addColorStop(0, "#9370DB"); grad.addColorStop(0.5, "#E6E6FA"); grad.addColorStop(1, "#9370DB"); 
-        ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
-        
-        ctx.fillStyle = "#32CD32"; ctx.fillRect(0, 300, canvas.width, 300);
-        drawShed(50, 350); drawTree(650, 350); drawTree(720, 380); drawTree(580, 400);
-
-        let runX = 400 + Math.sin(frame * 0.05) * 300;
-        let runY = 400 + Math.cos(frame * 0.07) * 50; 
-        let runDir = Math.cos(frame * 0.05) > 0 ? 1 : -1;
-        drawDylan(runX, runY, runDir, true);
-
-        drawOutlinedText("FREEDOM!", 400, 100, 50, "center", "#FFD700");
-        drawOutlinedText("Dylan is free in the garden!", 400, 150, 24, "center", "white");
-    }
-
-    function drawLoseScene() {
-        let grad = ctx.createLinearGradient(0, 0, 0, 600);
-        grad.addColorStop(0, "#4B0082"); grad.addColorStop(0.5, "#8A2BE2"); grad.addColorStop(1, "#4B0082"); 
-        ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
-
-        drawMelissa(300, 300, 1, true); 
-        drawRealSock(360, 350, "red", "white"); drawRealSock(370, 340, "blue", "white"); drawRealSock(380, 355, "green", "white");
-        drawDylan(500, 320, -1, false);
-
-        drawOutlinedText("CAUGHT!", 400, 150, 50, "center", "#FF4500");
-        drawOutlinedText('"No Dylan, these socks are for Dobby!"', 400, 220, 28, "center", "white");
-        drawOutlinedText("(Melissa took them all away)", 400, 500, 20, "center", "#ccc");
-    }
-
-    function loop() {
-        update();
-        draw();
-        if(gameState === 'PLAYING' || gameState === 'WON' || gameState === 'LOST') {
-            requestAnimationFrame(loop);
-        }
-    }
-
-</script>
-</body>
-</html>
+        // Door Label
+        ctx.font = "bold 16px Verdana"; ctx.textAlign = "center"; ctx.fillStyle = "white"; 
+        ctx.strokeStyle = "black"; ctx.lineWidth = 3; ctx.strokeText("DOGGY DOOR", door.x + door.w/2, door.y - 15);
+        ctx.fillText("DOGGY DOOR", door.x + door.w/2, door.y
