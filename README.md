@@ -1,1 +1,1 @@
-This game was created as a bit of fun by Lou Anderson Copywrite 2025
+Copyright Lou Anderson 202
