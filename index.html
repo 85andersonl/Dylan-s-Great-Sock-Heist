@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
+        /* FIX 1: Remove Scroll Bars & Lines */
         html, body {
-            background-color: #000000; /* Pure black to blend with bezels */
+            background-color: #000000; /* Pure black to blend with phone bezel */
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; /* Prevents scroll bars */
+            overflow: hidden; /* Stops the scroll bar line */
             position: fixed; /* Locks the screen in place */
-            inset: 0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -22,15 +22,15 @@
             touch-action: none; 
         }
         
-        /* THE GAME WRAPPER - This scales everything inside it */
-        #gameWrapper {
+        #gameContainer {
             position: relative;
-            width: 800px;
+            width: 800px; 
             height: 600px;
             box-shadow: 0 0 50px rgba(0,0,0,0.5);
-            background-color: #000;
+            border-radius: 20px;
             overflow: hidden;
-            transform-origin: center center; /* Scale from center */
+            background-color: #000;
+            border: 4px solid rgba(255,255,255,0.1);
         }
 
         canvas {
@@ -47,7 +47,6 @@
             overflow: hidden;
         }
 
-        /* --- START SCREEN --- */
         #startScreen {
             background-image: url('cover.jpg'); 
             background-size: cover;
@@ -59,7 +58,7 @@
 
         /* --- BUTTON STYLES --- */
         
-        /* 1. Purple Button (Start & Lose Screen) */
+        /* Purple Button */
         .purple-btn {
             padding: 16px 60px;
             font-size: 26px;
@@ -70,30 +69,30 @@
             cursor: pointer; 
             font-weight: 600;
             box-shadow: 0 8px 20px rgba(75, 0, 130, 0.4);
-            transition: transform 0.1s;
+            transition: all 0.2s;
             pointer-events: auto;
             text-transform: uppercase;
             letter-spacing: 1px;
             position: absolute;
             left: 50%;
-            bottom: 28%; /* Locked position relative to 800x600 canvas */
+            bottom: 28%; 
             transform: translateX(-50%);
             white-space: nowrap;
         }
         .purple-btn:active { transform: translateX(-50%) scale(0.95); }
 
-        /* 2. White "Get More Socks" Button (Win Screen Only) */
+        /* White "Get More Socks" Button */
         .win-btn {
             padding: 12px 35px;
             font-size: 20px;    
             background: white;
             color: black;
-            border: 3px solid #111;
+            border: 2px solid #111;
             border-radius: 15px; 
             cursor: pointer; 
             font-weight: 800;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
+            transition: all 0.2s;
             pointer-events: auto;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -105,33 +104,33 @@
         }
         .win-btn:active { transform: translateX(-50%) scale(0.95); }
 
-
-        /* --- END SCREEN --- */
         #endScreenControls { 
             display: none; 
             pointer-events: none;
         }
         #endScreenControls > * { pointer-events: auto; }
 
-        /* --- Mobile Controls --- */
+        /* --- FIX 2: COMPACT JOYSTICK CONTROLS --- */
         #mobileControls {
             position: absolute;
-            bottom: 30px; /* Moved up slightly to avoid being cut off */
-            right: 30px;  /* Moved in slightly */
+            bottom: 50px; /* Moved UP significantly */
+            right: 30px;
             z-index: 50;
             display: flex;
             flex-direction: column;
             align-items: center;
-            opacity: 0.7;
+            opacity: 0.6;
+            gap: 5px; /* Tighter gap */
         }
 
-        .control-row { display: flex; gap: 10px; }
+        .control-row { display: flex; gap: 5px; } /* Tighter gap */
+        
         .d-btn {
-            width: 70px; height: 70px; /* Base size, will scale down on phone */
+            width: 65px; height: 65px; /* Slightly more compact */
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(5px);
             border: 2px solid rgba(255,255,255,0.4);
-            border-radius: 50%;
+            border-radius: 15px; /* Rounded square shape (like a key) */
             color: white;
             font-size: 30px;
             display: flex;
@@ -139,7 +138,6 @@
             align-items: center;
             cursor: pointer;
             touch-action: manipulation;
-            margin: 5px;
             user-select: none;
             pointer-events: auto;
         }
@@ -188,11 +186,19 @@
             text-shadow: 1px 1px 0px white; 
             letter-spacing: 1px;
         }
+
+        /* Mobile Scaling for Buttons */
+        @media (max-width: 768px) {
+            .purple-btn { padding: 12px 40px; font-size: 18px; bottom: 25%; }
+            .win-btn { padding: 10px 30px; font-size: 16px; bottom: 12%; }
+            .d-btn { width: 55px; height: 55px; font-size: 24px; } /* Smaller touch buttons on small phones */
+            #mobileControls { bottom: 40px; right: 20px; }
+        }
     </style>
 </head>
 <body>
 
-<div id="gameWrapper">
+<div id="gameContainer">
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     
     <div id="inGameUI" style="display:none;">Socks: <span id="scoreSpan">0</span> / 15</div>
@@ -224,7 +230,7 @@
 
 <script>
 window.onload = function() {
-    const wrapper = document.getElementById('gameWrapper');
+    const container = document.getElementById('gameContainer');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const startScreen = document.getElementById('startScreen');
@@ -243,22 +249,19 @@ window.onload = function() {
     document.getElementById('startBtn').onclick = startGame;
     tryAgainBtn.onclick = resetGame;
 
-    // --- NEW SCALING LOGIC ---
-    // This scales the entire game wrapper like an image
     function resizeGame() {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        const gameWidth = 800;
-        const gameHeight = 600;
-        
-        // Calculate scale
-        const scale = Math.min(width / gameWidth, height / gameHeight);
-        
-        // Apply scale to wrapper
-        wrapper.style.transform = `scale(${scale})`;
-        
-        // Center alignment fix for some browsers
-        // (The flex body handles centering, this just ensures size)
+        const targetRatio = 800 / 600; 
+        const windowRatio = window.innerWidth / window.innerHeight;
+        let finalWidth, finalHeight;
+        if (windowRatio > targetRatio) {
+            finalHeight = window.innerHeight * 0.95; 
+            finalWidth = finalHeight * targetRatio;
+        } else {
+            finalWidth = window.innerWidth * 0.95;
+            finalHeight = finalWidth / targetRatio;
+        }
+        container.style.width = finalWidth + "px";
+        container.style.height = finalHeight + "px";
     }
     window.addEventListener('resize', resizeGame);
     resizeGame(); 
