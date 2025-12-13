@@ -45,15 +45,19 @@
 
         /* --- START SCREEN --- */
         #startScreen {
-            /* Make sure you upload 'cover.jpg' to GitHub! */
+            /* This looks for your uploaded image */
             background-image: url('cover.jpg'); 
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            /* Fallback gradient if image is missing */
-            background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%), url('cover.jpg');
-            background-blend-mode: normal; 
-            display: block; 
+            /* Fallback color if image is missing */
+            background-color: #6a4c93; 
+            
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; 
+            align-items: center;
+            padding-bottom: 13%; 
         }
 
         /* --- PURPLE BUTTONS --- */
@@ -68,33 +72,22 @@
             font-weight: 600;
             font-family: 'Fredoka', sans-serif;
             box-shadow: 0 8px 20px rgba(75, 0, 130, 0.4);
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.2s;
             pointer-events: auto;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        .purple-btn:hover {
-            transform: scale(1.05) translateY(-3px);
-            box-shadow: 0 12px 30px rgba(75, 0, 130, 0.6);
-            background: linear-gradient(135deg, #c47ac7 0%, #580e72 100%);
-        }
+        .purple-btn:hover { transform: scale(1.05) translateY(-3px); }
+        .purple-btn:active { transform: scale(0.95) translateY(2px); }
 
-        .purple-btn:active {
-            transform: scale(0.95) translateY(2px);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        /* Start Button Positioning */
+        /* Start Button Positioning - Moves it up to cover the image button */
         #startBtn {
             position: absolute;
             left: 50%;
             bottom: 28%; 
             transform: translateX(-50%);
         }
-        #startBtn:hover { transform: translateX(-50%) scale(1.05) translateY(-3px); }
-        #startBtn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
-
 
         /* --- END SCREEN --- */
         #endScreenControls { 
@@ -157,30 +150,31 @@
             backdrop-filter: blur(4px);
         }
         
-        /* Sprint Bar - MOVED DOWN AND RECOLORED */
+        /* Sprint Bar - FIXED POSITION & COLORS */
         #sprintBarContainer {
             position: absolute; 
-            top: 100px; /* Moved down to fix overlap */
+            top: 80px; /* Moved down so it doesn't overlap score */
             left: 20px;
-            width: 150px; height: 10px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 5px;
-            border: 1px solid white;
+            width: 150px; height: 12px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            border: 2px solid white;
             display: none;
             z-index: 15;
         }
         #sprintBarFill {
             width: 0%; height: 100%;
-            background: #32CD32; /* Green charging color */
-            border-radius: 5px;
+            background: #32CD32; /* Green */
+            border-radius: 8px;
             transition: width 0.1s;
         }
         #sprintLabel {
-            position: absolute; top: -25px; left: 0;
-            font-size: 14px; 
-            color: black; /* Black text */
-            font-weight: bold;
-            text-shadow: 1px 1px 2px white; /* White shadow for readability */
+            position: absolute; top: -25px; left: 5px;
+            font-size: 16px; 
+            color: black; /* Black Text */
+            font-weight: 800;
+            text-shadow: 1px 1px 0px white; /* White outline for readability */
+            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -192,7 +186,7 @@
     <div id="inGameUI" style="display:none;">Socks: <span id="scoreSpan">0</span> / 15</div>
     
     <div id="sprintBarContainer">
-        <div id="sprintLabel">SPRINT CHARGE</div>
+        <div id="sprintLabel">SPRINT</div>
         <div id="sprintBarFill"></div>
     </div>
 
@@ -218,7 +212,6 @@
 
 <script>
 window.onload = function() {
-    // --- Elements ---
     const container = document.getElementById('gameContainer');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -234,7 +227,6 @@ window.onload = function() {
     document.getElementById('startBtn').onclick = startGame;
     document.getElementById('tryAgainBtn').onclick = resetGame;
 
-    // --- Responsive Resize ---
     function resizeGame() {
         const targetRatio = 800 / 600; 
         const windowRatio = window.innerWidth / window.innerHeight;
@@ -252,25 +244,20 @@ window.onload = function() {
     window.addEventListener('resize', resizeGame);
     resizeGame(); 
 
-    // --- Game Variables ---
     let frame = 0;
     let gameState = 'START'; 
     let socksCollected = 0;
     const socksNeeded = 15; 
     let startTime;
     const headStartDuration = 3000; 
-    
-    // Sprint Vars
     let moveStartTime = 0; 
     let isSprinting = false;
 
-    // --- Objects ---
     let dylan = { x: 400, y: 400, w: 80, h: 55, baseSpeed: 5, speed: 5, dirX: 1, isMoving: false };
     let melissa = { x: -100, y: 400, w: 50, h: 110, speed: 3.2, dirX: 1 };
     const door = { x: 350, y: 60, w: 100, h: 120 }; 
     let socks = [];
 
-    // --- Inputs ---
     const keys = {};
     window.addEventListener('keydown', e => {
         if (!keys[e.key]) moveStartTime = Date.now();
@@ -312,7 +299,6 @@ window.onload = function() {
     setupTouchButton('btnLeft', 'ArrowLeft');
     setupTouchButton('btnRight', 'ArrowRight');
 
-    // --- Functions ---
     function startGame() {
         startScreen.style.display = 'none';
         inGameUI.style.display = 'block';
@@ -351,8 +337,6 @@ window.onload = function() {
         }
     }
 
-    // --- ART ASSETS ---
-
     function drawEnvironment() {
         ctx.fillStyle = "#e0f2f1"; ctx.fillRect(0,0, canvas.width, 200);
         let floorGrad = ctx.createLinearGradient(0, 200, 0, 600);
@@ -385,16 +369,13 @@ window.onload = function() {
     }
 
     function drawDylan(x, y, dir, hasSocks, scale=1) {
-        ctx.save();
-        ctx.translate(x + dylan.w/2, y + dylan.h/2);
-        ctx.scale(scale, scale);
+        ctx.save(); ctx.translate(x + dylan.w/2, y + dylan.h/2); ctx.scale(scale, scale);
         if (dir === -1) ctx.scale(-1, 1);
 
         if (isSprinting && gameState === 'PLAYING') {
             ctx.fillStyle = `hsl(${frame * 20}, 100%, 70%)`; 
             for(let i=0; i<3; i++) {
-                let sx = -50 - Math.random() * 20;
-                let sy = Math.random() * 30 - 10;
+                let sx = -50 - Math.random() * 20; let sy = Math.random() * 30 - 10;
                 ctx.beginPath(); ctx.arc(sx, sy, 4, 0, Math.PI*2); ctx.fill();
             }
         }
@@ -422,25 +403,19 @@ window.onload = function() {
 
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(35, -15 + moveBounce, 24, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.ellipse(28, -25 + moveBounce, 10, 18, -0.5, 0, Math.PI * 2); ctx.fill(); 
-        ctx.fillStyle = "white"; 
-        ctx.beginPath(); ctx.ellipse(35, -15 + moveBounce, 6, 18, 0, 0, Math.PI * 2); ctx.fill(); 
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(35, -15 + moveBounce, 6, 18, 0, 0, Math.PI * 2); ctx.fill(); 
         ctx.beginPath(); ctx.ellipse(38, -8 + moveBounce, 12, 10, 0, 0, Math.PI * 2); ctx.fill(); 
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(42, -12 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
         ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(36, -20 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(37, -20 + moveBounce, 1.5, 0, Math.PI * 2); ctx.fill(); 
 
-        if (hasSocks) {
-            drawRealSock(45, -8 + moveBounce, socks[0] ? socks[0].color1 : "#FF69B4", "white", 0.6);
-        } else {
-             ctx.fillStyle = "#ff8a80"; ctx.beginPath(); ctx.ellipse(42, -5+moveBounce, 5, 8, 0.5, 0, Math.PI*2); ctx.fill();
-        }
+        if (hasSocks) { drawRealSock(45, -8 + moveBounce, socks[0] ? socks[0].color1 : "#FF69B4", "white", 0.6); } 
+        else { ctx.fillStyle = "#ff8a80"; ctx.beginPath(); ctx.ellipse(42, -5+moveBounce, 5, 8, 0.5, 0, Math.PI*2); ctx.fill(); }
         ctx.restore();
     }
 
     function drawMelissa(x, y, dir, isAngry, scale=1) {
-        ctx.save();
-        ctx.translate(x + melissa.w/2, y + melissa.h/2);
-        ctx.scale(scale, scale);
+        ctx.save(); ctx.translate(x + melissa.w/2, y + melissa.h/2); ctx.scale(scale, scale);
         if (dir === -1) ctx.scale(-1, 1);
 
         let sway = isAngry ? 0 : Math.sin(frame * 0.1) * 2;
@@ -473,7 +448,6 @@ window.onload = function() {
         ctx.restore();
     }
 
-    // --- Update Loop ---
     function update() {
         if (gameState !== 'PLAYING') return;
         frame++;
@@ -493,7 +467,6 @@ window.onload = function() {
         dylan.isMoving = false;
         let currentSpeed = dylan.baseSpeed;
         
-        // --- SPRINT LOGIC ---
         if (moveStartTime > 0) {
             let duration = Date.now() - moveStartTime;
             let charge = Math.min(100, (duration / 2000) * 100);
@@ -502,10 +475,10 @@ window.onload = function() {
             if (duration > 2000) {
                 currentSpeed = 10; 
                 isSprinting = true;
-                sprintBarFill.style.background = "#00FF00"; // Bright Green Boost
+                sprintBarFill.style.background = "#00FF00"; // Bright Green
             } else {
                 isSprinting = false;
-                sprintBarFill.style.background = "#32CD32"; // Standard Green Charge
+                sprintBarFill.style.background = "#32CD32"; // Darker Green
             }
         }
 
@@ -514,12 +487,11 @@ window.onload = function() {
         if (keys['ArrowLeft'] && dylan.x > 0) { dylan.x -= currentSpeed; dylan.dirX = -1; dylan.isMoving = true; }
         if (keys['ArrowRight'] && dylan.x + dylan.w < 800) { dylan.x += currentSpeed; dylan.dirX = 1; dylan.isMoving = true; }
 
-        // --- DOOR COLLISION FIX ---
+        // Door Logic
         if (dylan.y < door.y + door.h && dylan.x > door.x - 20 && dylan.x < door.x + door.w + 20) {
              if (socksCollected >= socksNeeded) {
                  gameState = 'WON'; endGame();
              } else {
-                 // Show message if trying to enter early
                  statusMsg.innerText = "Collect all socks first!";
                  statusMsg.style.color = "white";
              }
@@ -580,8 +552,7 @@ window.onload = function() {
     function roundRect(x, y, w, h, radius) {
         if (w < 2 * radius) radius = w / 2;
         if (h < 2 * radius) radius = h / 2;
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
+        ctx.beginPath(); ctx.moveTo(x + radius, y);
         ctx.arcTo(x + w, y, x + w, y + h, radius);
         ctx.arcTo(x + w, y + h, x, y + h, radius);
         ctx.arcTo(x, y + h, x, y, radius);
@@ -627,7 +598,6 @@ window.onload = function() {
         ctx.font = "bold 50px Fredoka"; ctx.textAlign = "center"; 
         ctx.fillStyle = "white"; ctx.shadowColor="rgba(0,0,0,0.3)"; ctx.shadowBlur=10;
         ctx.fillText("FREEDOM!", 400, 100); ctx.shadowBlur=0;
-        
         ctx.font = "24px Fredoka"; 
         ctx.fillText("Dylan is free in the garden!", 400, 150);
     }
@@ -637,6 +607,7 @@ window.onload = function() {
         grad.addColorStop(0, "#a8c0ff"); grad.addColorStop(1, "#3f2b96"); 
         ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
 
+        // Glassmorphism Box
         ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
         roundRect(100, 100, 600, 400, 30);
         ctx.fill();
@@ -652,7 +623,6 @@ window.onload = function() {
         
         ctx.font = "600 26px Fredoka"; ctx.fillStyle = "#333";
         ctx.fillText('"No Dylan, these socks are for Dobby!"', 400, 240);
-        
         ctx.font = "20px Fredoka"; ctx.fillStyle = "#fff";
         ctx.fillText("(Melissa took them all away)", 400, 280);
     }
