@@ -5,22 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #1a1a1a;
+        html, body {
+            background-color: #000000;
             margin: 0;
             padding: 0;
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            /* These 3 lines prevent the 'scroll bar' line */
+            width: 100%;
+            height: 100%;
+            overflow: hidden; 
+            position: fixed; 
+            touch-action: none; 
             font-family: 'Fredoka', sans-serif;
             color: white;
-            touch-action: none; 
         }
         
-        /* THE GAME WRAPPER - This scales everything inside it */
+        /* THE GAME WRAPPER - Scales everything perfectly */
         #gameWrapper {
             position: relative;
             width: 800px;
@@ -28,7 +27,7 @@
             box-shadow: 0 0 50px rgba(0,0,0,0.5);
             background-color: #000;
             overflow: hidden;
-            transform-origin: center center; /* Scale from center */
+            transform-origin: center center;
         }
 
         canvas {
@@ -74,7 +73,7 @@
             letter-spacing: 1px;
             position: absolute;
             left: 50%;
-            bottom: 28%; /* Locked position relative to 800x600 canvas */
+            bottom: 28%; 
             transform: translateX(-50%);
             white-space: nowrap;
         }
@@ -111,7 +110,7 @@
         }
         #endScreenControls > * { pointer-events: auto; }
 
-        /* --- Mobile Controls --- */
+        /* --- CONTROLS: Reverted to the reliable layout --- */
         #mobileControls {
             position: absolute;
             bottom: 20px; right: 20px;
@@ -124,7 +123,7 @@
 
         .control-row { display: flex; gap: 10px; }
         .d-btn {
-            width: 70px; height: 70px; /* Base size, will scale down on phone */
+            width: 70px; height: 70px;
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(5px);
             border: 2px solid rgba(255,255,255,0.4);
@@ -240,8 +239,7 @@ window.onload = function() {
     document.getElementById('startBtn').onclick = startGame;
     tryAgainBtn.onclick = resetGame;
 
-    // --- NEW SCALING LOGIC ---
-    // This scales the entire game wrapper like an image
+    // --- SCALING LOGIC ---
     function resizeGame() {
         const width = window.innerWidth;
         const height = window.innerHeight;
@@ -253,9 +251,6 @@ window.onload = function() {
         
         // Apply scale to wrapper
         wrapper.style.transform = `scale(${scale})`;
-        
-        // Center alignment fix for some browsers
-        // (The flex body handles centering, this just ensures size)
     }
     window.addEventListener('resize', resizeGame);
     resizeGame(); 
