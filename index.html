@@ -40,54 +40,47 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 20;
-            text-align: center;
+            overflow: hidden;
+        }
+
+        /* --- START SCREEN WITH YOUR UPLOADED IMAGE --- */
+        #startScreen {
+            /* This looks for the file named cover.jpg in your GitHub folder */
+            background-image: url('cover.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-end; 
             align-items: center;
-            /* Allow clicks to pass through empty areas */
-            pointer-events: none; 
+            padding-bottom: 13%; 
         }
-        
-        /* Make buttons and text clickable/visible */
-        #startScreen > *, #endScreenControls > * { pointer-events: auto; }
 
+        /* Invisible button placed over the image's button area */
+        #startBtn {
+            width: 250px; 
+            height: 80px;
+            opacity: 0; /* Invisible so we see the image behind it */
+            cursor: pointer;
+            border: none;
+            padding: 0;
+        }
+
+        /* --- END SCREEN --- */
         #endScreenControls { 
             display: none; 
+            flex-direction: column;
             justify-content: flex-end; 
+            align-items: center;
             padding-bottom: 90px;
+            pointer-events: none;
         }
+        #endScreenControls > * { pointer-events: auto; }
 
-        /* --- Typography --- */
-        h1 { 
-            margin: 0 0 15px 0; 
-            font-size: 55px; 
-            font-weight: 600;
-            color: #ffffff; 
-            text-shadow: 0px 4px 10px rgba(138, 43, 226, 0.4); 
-            letter-spacing: 1px;
-            line-height: 1.1;
-        }
-        
-        p { 
-            font-size: 20px; 
-            color: #f0f0f0; 
-            margin: 8px 0; 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            font-weight: 400;
-        }
-        
-        .tip {
-            margin-top: 20px;
-            font-size: 16px;
-            color: #e0e0e0;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px 16px;
-            border-radius: 20px;
-        }
-
-        /* --- Buttons --- */
-        button {
+        /* --- IN-GAME BUTTONS (TRY AGAIN) --- */
+        #tryAgainBtn {
             padding: 16px 60px;
             font-size: 24px;
             background: linear-gradient(90deg, #8A2BE2 0%, #008080 100%);
@@ -96,16 +89,15 @@
             border-radius: 50px;
             cursor: pointer; 
             font-weight: 600;
-            margin-top: 30px;
             font-family: 'Fredoka', sans-serif;
             box-shadow: 0 5px 20px rgba(138, 43, 226, 0.4);
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        button:hover {
+        #tryAgainBtn:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(138, 43, 226, 0.6);
         }
-        button:active { transform: scale(0.98); }
+        #tryAgainBtn:active { transform: scale(0.98); }
 
         /* --- Touch Controls --- */
         #mobileControls {
@@ -176,11 +168,7 @@
     </div>
 
     <div id="startScreen">
-        <h1>DYLAN'S GREAT<br>SOCK HEIST</h1>
-        <p>Collect all 15 socks to unlock the door.</p>
-        <p>Run to the garden before Melissa arrives!</p>
-        <div class="tip"><strong>TIP:</strong> Hold direction for 2s to SPRINT!</div>
-        <button id="startBtn">START GAME</button>
+        <button id="startBtn"></button>
     </div>
 
     <div id="endScreenControls">
@@ -477,27 +465,6 @@ window.onload = function() {
         ctx.restore();
     }
 
-    function drawStartScene() {
-        // Soft Modern Gradient Background
-        let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        grad.addColorStop(0, "#a8c0ff"); // Light Blue
-        grad.addColorStop(1, "#3f2b96"); // Deep Purple
-        ctx.fillStyle = grad;
-        ctx.fillRect(0,0, canvas.width, canvas.height);
-
-        // Soft white overlay circle for focus
-        ctx.fillStyle = "rgba(255,255,255,0.1)";
-        ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2, 300, 0, Math.PI*2); ctx.fill();
-
-        // Draw Big Dylan on Right
-        // We simulate a frame count for animation
-        frame++;
-        drawDylan(550, 350, -1, true, 1.5); // 1.5x scale
-        
-        // Draw Melissa on Left
-        drawMelissa(150, 320, 1, false, 1.5); // 1.5x scale
-    }
-
     // --- Update Loop ---
     function update() {
         if (gameState !== 'PLAYING') return;
@@ -569,11 +536,9 @@ window.onload = function() {
     }
 
     function draw() {
-        if(gameState === 'START') {
-            drawStartScene();
-            requestAnimationFrame(draw); 
-            return;
-        }
+        // If state is START, we do nothing on canvas. 
+        // The HTML background image handles it.
+        if(gameState === 'START') return;
 
         ctx.clearRect(0,0, canvas.width, canvas.height);
 
