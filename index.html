@@ -7,26 +7,28 @@
     <style>
         body {
             background-color: #1a1a1a;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: 'Fredoka', sans-serif;
             overflow: hidden;
+            font-family: 'Fredoka', sans-serif;
             color: white;
             touch-action: none; 
         }
         
-        #gameContainer {
+        /* THE GAME WRAPPER - This scales everything inside it */
+        #gameWrapper {
             position: relative;
-            width: 800px; 
+            width: 800px;
             height: 600px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            border-radius: 20px;
-            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
             background-color: #000;
-            border: 4px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            transform-origin: center center; /* Scale from center */
         }
 
         canvas {
@@ -66,31 +68,30 @@
             cursor: pointer; 
             font-weight: 600;
             box-shadow: 0 8px 20px rgba(75, 0, 130, 0.4);
-            transition: all 0.2s;
+            transition: transform 0.1s;
             pointer-events: auto;
             text-transform: uppercase;
             letter-spacing: 1px;
             position: absolute;
             left: 50%;
-            bottom: 28%; /* Keeps aligned with background image */
+            bottom: 28%; /* Locked position relative to 800x600 canvas */
             transform: translateX(-50%);
             white-space: nowrap;
         }
-        .purple-btn:hover { transform: translateX(-50%) scale(1.05) translateY(-3px); }
-        .purple-btn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
+        .purple-btn:active { transform: translateX(-50%) scale(0.95); }
 
         /* 2. White "Get More Socks" Button (Win Screen Only) */
         .win-btn {
             padding: 12px 35px;
-            font-size: 18px;    
+            font-size: 20px;    
             background: white;
             color: black;
-            border: 2px solid #111;
-            border-radius: 15px; /* Smooth rectangle */
+            border: 3px solid #111;
+            border-radius: 15px; 
             cursor: pointer; 
             font-weight: 800;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            transition: all 0.2s;
+            transition: transform 0.1s;
             pointer-events: auto;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -100,8 +101,7 @@
             transform: translateX(-50%);
             white-space: nowrap;
         }
-        .win-btn:hover { transform: translateX(-50%) scale(1.05) translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
-        .win-btn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
+        .win-btn:active { transform: translateX(-50%) scale(0.95); }
 
 
         /* --- END SCREEN --- */
@@ -119,20 +119,18 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            opacity: 0.6;
-            transition: opacity 0.3s;
+            opacity: 0.7;
         }
-        #mobileControls:hover, #mobileControls:active { opacity: 1; }
 
         .control-row { display: flex; gap: 10px; }
         .d-btn {
-            width: 60px; height: 60px;
-            background: rgba(255, 255, 255, 0.15);
+            width: 70px; height: 70px; /* Base size, will scale down on phone */
+            background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(5px);
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.4);
             border-radius: 50%;
             color: white;
-            font-size: 28px;
+            font-size: 30px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -142,21 +140,21 @@
             user-select: none;
             pointer-events: auto;
         }
-        .d-btn:active { background: rgba(255, 255, 255, 0.3); transform: scale(0.95); }
+        .d-btn:active { background: rgba(255, 255, 255, 0.4); transform: scale(0.95); }
 
         /* Game HUD */
         #statusMsg { 
             position: absolute; bottom: 30px; width: 100%; 
             text-align: center; font-size: 24px; 
             font-weight: 600; color: white; 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
             pointer-events: none; z-index: 15;
         }
         #inGameUI {
             position: absolute; top: 20px; left: 20px;
-            color: white; font-size: 22px; font-weight: 600; pointer-events: none;
+            color: white; font-size: 24px; font-weight: 600; pointer-events: none;
             background: rgba(0,0,0,0.3);
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 30px;
             backdrop-filter: blur(4px);
         }
@@ -164,7 +162,7 @@
         /* Sprint Bar */
         #sprintBarContainer {
             position: absolute; 
-            top: 80px; 
+            top: 85px; 
             left: 20px;
             width: 150px; height: 12px;
             background: rgba(255,255,255,0.3);
@@ -175,7 +173,7 @@
         }
         #sprintBarFill {
             width: 0%; height: 100%;
-            background: #32CD32; /* Green */
+            background: #32CD32; 
             border-radius: 8px;
             transition: width 0.1s;
         }
@@ -187,46 +185,11 @@
             text-shadow: 1px 1px 0px white; 
             letter-spacing: 1px;
         }
-
-        /* --- MOBILE ADJUSTMENTS (MEDIA QUERIES) --- */
-        @media (max-width: 768px) {
-            .purple-btn {
-                padding: 12px 40px; /* Reduce padding */
-                font-size: 18px;    /* Reduce font size */
-                /* Removed 'bottom' override so it stays aligned with desktop ratio */
-            }
-            
-            .win-btn {
-                padding: 10px 30px;
-                font-size: 16px;
-                bottom: 12%;
-            }
-
-            .d-btn {
-                width: 50px; height: 50px; 
-                font-size: 22px;
-            }
-
-            #inGameUI {
-                font-size: 18px;
-                padding: 6px 12px;
-            }
-
-            #sprintBarContainer {
-                top: 70px;
-                width: 120px;
-            }
-            
-            #statusMsg {
-                font-size: 18px;
-                bottom: 85px; 
-            }
-        }
     </style>
 </head>
 <body>
 
-<div id="gameContainer">
+<div id="gameWrapper">
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     
     <div id="inGameUI" style="display:none;">Socks: <span id="scoreSpan">0</span> / 15</div>
@@ -258,7 +221,7 @@
 
 <script>
 window.onload = function() {
-    const container = document.getElementById('gameContainer');
+    const wrapper = document.getElementById('gameWrapper');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const startScreen = document.getElementById('startScreen');
@@ -277,19 +240,22 @@ window.onload = function() {
     document.getElementById('startBtn').onclick = startGame;
     tryAgainBtn.onclick = resetGame;
 
+    // --- NEW SCALING LOGIC ---
+    // This scales the entire game wrapper like an image
     function resizeGame() {
-        const targetRatio = 800 / 600; 
-        const windowRatio = window.innerWidth / window.innerHeight;
-        let finalWidth, finalHeight;
-        if (windowRatio > targetRatio) {
-            finalHeight = window.innerHeight * 0.95; 
-            finalWidth = finalHeight * targetRatio;
-        } else {
-            finalWidth = window.innerWidth * 0.95;
-            finalHeight = finalWidth / targetRatio;
-        }
-        container.style.width = finalWidth + "px";
-        container.style.height = finalHeight + "px";
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const gameWidth = 800;
+        const gameHeight = 600;
+        
+        // Calculate scale
+        const scale = Math.min(width / gameWidth, height / gameHeight);
+        
+        // Apply scale to wrapper
+        wrapper.style.transform = `scale(${scale})`;
+        
+        // Center alignment fix for some browsers
+        // (The flex body handles centering, this just ensures size)
     }
     window.addEventListener('resize', resizeGame);
     resizeGame(); 
