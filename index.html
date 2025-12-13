@@ -50,14 +50,8 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            /* Fallback color if image is missing */
             background-color: #6a4c93; 
-            
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end; 
-            align-items: center;
-            padding-bottom: 13%; 
+            display: block; 
         }
 
         /* --- PURPLE BUTTONS --- */
@@ -81,7 +75,7 @@
         .purple-btn:hover { transform: scale(1.05) translateY(-3px); }
         .purple-btn:active { transform: scale(0.95) translateY(2px); }
 
-        /* Start Button Positioning - Moves it up to cover the image button */
+        /* Start Button Positioning */
         #startBtn {
             position: absolute;
             left: 50%;
@@ -150,10 +144,10 @@
             backdrop-filter: blur(4px);
         }
         
-        /* Sprint Bar - FIXED POSITION & COLORS */
+        /* Sprint Bar */
         #sprintBarContainer {
             position: absolute; 
-            top: 80px; /* Moved down so it doesn't overlap score */
+            top: 80px; 
             left: 20px;
             width: 150px; height: 12px;
             background: rgba(255,255,255,0.3);
@@ -171,9 +165,9 @@
         #sprintLabel {
             position: absolute; top: -25px; left: 5px;
             font-size: 16px; 
-            color: black; /* Black Text */
+            color: black; 
             font-weight: 800;
-            text-shadow: 1px 1px 0px white; /* White outline for readability */
+            text-shadow: 1px 1px 0px white; 
             letter-spacing: 1px;
         }
     </style>
@@ -403,7 +397,8 @@ window.onload = function() {
 
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(35, -15 + moveBounce, 24, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.ellipse(28, -25 + moveBounce, 10, 18, -0.5, 0, Math.PI * 2); ctx.fill(); 
-        ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(35, -15 + moveBounce, 6, 18, 0, 0, Math.PI * 2); ctx.fill(); 
+        ctx.fillStyle = "white"; 
+        ctx.beginPath(); ctx.ellipse(35, -15 + moveBounce, 6, 18, 0, 0, Math.PI * 2); ctx.fill(); 
         ctx.beginPath(); ctx.ellipse(38, -8 + moveBounce, 12, 10, 0, 0, Math.PI * 2); ctx.fill(); 
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(42, -12 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
         ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(36, -20 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
@@ -415,7 +410,9 @@ window.onload = function() {
     }
 
     function drawMelissa(x, y, dir, isAngry, scale=1) {
-        ctx.save(); ctx.translate(x + melissa.w/2, y + melissa.h/2); ctx.scale(scale, scale);
+        ctx.save();
+        ctx.translate(x + melissa.w/2, y + melissa.h/2);
+        ctx.scale(scale, scale);
         if (dir === -1) ctx.scale(-1, 1);
 
         let sway = isAngry ? 0 : Math.sin(frame * 0.1) * 2;
@@ -482,13 +479,15 @@ window.onload = function() {
             }
         }
 
-        if (keys['ArrowUp'] && dylan.y > 180) { dylan.y -= currentSpeed; dylan.isMoving = true; }
+        // Updated Movement: Allows walking UP to y=150 (closer to door)
+        if (keys['ArrowUp'] && dylan.y > 150) { dylan.y -= currentSpeed; dylan.isMoving = true; }
         if (keys['ArrowDown'] && dylan.y + dylan.h < 600) { dylan.y += currentSpeed; dylan.isMoving = true; }
         if (keys['ArrowLeft'] && dylan.x > 0) { dylan.x -= currentSpeed; dylan.dirX = -1; dylan.isMoving = true; }
         if (keys['ArrowRight'] && dylan.x + dylan.w < 800) { dylan.x += currentSpeed; dylan.dirX = 1; dylan.isMoving = true; }
 
-        // Door Logic
-        if (dylan.y < door.y + door.h && dylan.x > door.x - 20 && dylan.x < door.x + door.w + 20) {
+        // Door Collision Logic (Fixed Zone)
+        // Checks if Dylan is near door X, and has walked UP far enough (y < 230)
+        if (dylan.x > door.x - 20 && dylan.x < door.x + door.w + 20 && dylan.y < 230) {
              if (socksCollected >= socksNeeded) {
                  gameState = 'WON'; endGame();
              } else {
@@ -552,7 +551,8 @@ window.onload = function() {
     function roundRect(x, y, w, h, radius) {
         if (w < 2 * radius) radius = w / 2;
         if (h < 2 * radius) radius = h / 2;
-        ctx.beginPath(); ctx.moveTo(x + radius, y);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
         ctx.arcTo(x + w, y, x + w, y + h, radius);
         ctx.arcTo(x + w, y + h, x, y + h, radius);
         ctx.arcTo(x, y + h, x, y, radius);
@@ -598,6 +598,7 @@ window.onload = function() {
         ctx.font = "bold 50px Fredoka"; ctx.textAlign = "center"; 
         ctx.fillStyle = "white"; ctx.shadowColor="rgba(0,0,0,0.3)"; ctx.shadowBlur=10;
         ctx.fillText("FREEDOM!", 400, 100); ctx.shadowBlur=0;
+        
         ctx.font = "24px Fredoka"; 
         ctx.fillText("Dylan is free in the garden!", 400, 150);
     }
@@ -607,7 +608,6 @@ window.onload = function() {
         grad.addColorStop(0, "#a8c0ff"); grad.addColorStop(1, "#3f2b96"); 
         ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
 
-        // Glassmorphism Box
         ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
         roundRect(100, 100, 600, 400, 30);
         ctx.fill();
@@ -623,6 +623,7 @@ window.onload = function() {
         
         ctx.font = "600 26px Fredoka"; ctx.fillStyle = "#333";
         ctx.fillText('"No Dylan, these socks are for Dobby!"', 400, 240);
+        
         ctx.font = "20px Fredoka"; ctx.fillStyle = "#fff";
         ctx.fillText("(Melissa took them all away)", 400, 280);
     }
