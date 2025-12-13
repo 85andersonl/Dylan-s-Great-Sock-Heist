@@ -53,7 +53,7 @@
             display: block; 
         }
 
-        /* --- BUTTON STYLES (Desktop Default) --- */
+        /* --- BUTTON STYLES --- */
         
         /* 1. Purple Button (Start & Lose Screen) */
         .purple-btn {
@@ -62,7 +62,7 @@
             background: linear-gradient(135deg, #b06ab3 0%, #450b5a 100%);
             color: white;
             border: 2px solid rgba(255,255,255,0.4);
-            border-radius: 50px; 
+            border-radius: 50px; /* Pill shape */
             cursor: pointer; 
             font-weight: 600;
             box-shadow: 0 8px 20px rgba(75, 0, 130, 0.4);
@@ -80,16 +80,17 @@
         .purple-btn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
 
         /* 2. White "Get More Socks" Button (Win Screen Only) */
+        /* 50% smaller, rectangular with smooth corners */
         .win-btn {
-            padding: 12px 35px;
-            font-size: 18px;    
+            padding: 12px 35px; /* Smaller padding */
+            font-size: 18px;    /* Smaller font */
             background: white;
             color: black;
             border: 2px solid #111;
-            border-radius: 15px; 
+            border-radius: 15px; /* Smooth rectangle corners */
             cursor: pointer; 
             font-weight: 800;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Nice shadow */
             transition: all 0.2s;
             pointer-events: auto;
             text-transform: uppercase;
@@ -188,39 +189,24 @@
             letter-spacing: 1px;
         }
 
-        /* --- MOBILE ADJUSTMENTS (MEDIA QUERIES) --- */
-        /* Only applies when screen width is 768px or less (Phones/Tablets) */
+        /* --- MOBILE ADJUSTMENTS --- */
         @media (max-width: 768px) {
             .purple-btn {
-                padding: 12px 40px; /* Reduce padding */
-                font-size: 18px;    /* Reduce font size */
-                bottom: 25%;        /* Adjust position slightly */
+                padding: 12px 40px; 
+                font-size: 18px;    
+                bottom: 25%;        
             }
-            
             .win-btn {
                 padding: 10px 30px;
                 font-size: 16px;
                 bottom: 12%;
             }
-
             .d-btn {
-                width: 50px; height: 50px; /* Slightly smaller touch buttons */
+                width: 50px; height: 50px; 
                 font-size: 22px;
             }
-
-            #inGameUI {
-                font-size: 18px;
-                padding: 6px 12px;
-            }
-
             #sprintBarContainer {
                 top: 70px;
-                width: 120px;
-            }
-            
-            #statusMsg {
-                font-size: 18px;
-                bottom: 85px; /* Move above touch controls */
             }
         }
     </style>
@@ -253,7 +239,7 @@
     </div>
 
     <div id="endScreenControls">
-        <button id="endGameBtn" class="purple-btn">TRY AGAIN</button>
+        <button id="tryAgainBtn" class="purple-btn">TRY AGAIN</button>
     </div>
 </div>
 
@@ -264,7 +250,7 @@ window.onload = function() {
     const ctx = canvas.getContext('2d');
     const startScreen = document.getElementById('startScreen');
     const endScreenControls = document.getElementById('endScreenControls');
-    const endGameBtn = document.getElementById('endGameBtn');
+    const tryAgainBtn = document.getElementById('tryAgainBtn');
     const inGameUI = document.getElementById('inGameUI');
     const statusMsg = document.getElementById('statusMsg');
     const scoreSpan = document.getElementById('scoreSpan');
@@ -276,7 +262,7 @@ window.onload = function() {
     const caughtImg = new Image(); caughtImg.src = 'caught.jpg';
 
     document.getElementById('startBtn').onclick = startGame;
-    endGameBtn.onclick = resetGame;
+    tryAgainBtn.onclick = resetGame;
 
     function resizeGame() {
         const targetRatio = 800 / 600; 
@@ -585,11 +571,11 @@ window.onload = function() {
         
         if (gameState === 'WON') {
             winStartTime = Date.now();
-            endGameBtn.className = 'win-btn';
-            endGameBtn.innerText = 'GET MORE SOCKS';
+            tryAgainBtn.className = 'win-btn';
+            tryAgainBtn.innerText = 'GET MORE SOCKS';
         } else {
-            endGameBtn.className = 'purple-btn';
-            endGameBtn.innerText = 'TRY AGAIN';
+            tryAgainBtn.className = 'purple-btn';
+            tryAgainBtn.innerText = 'TRY AGAIN';
         }
     }
 
