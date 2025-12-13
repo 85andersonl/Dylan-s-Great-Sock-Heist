@@ -6,8 +6,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body {
-            /* Changed to Pure Black to merge with phone bezels (removes "lines") */
-            background-color: #000000;
+            background-color: #1a1a1a;
             margin: 0;
             padding: 0;
             height: 100vh;
@@ -21,7 +20,7 @@
             touch-action: none; 
         }
         
-        /* THE GAME WRAPPER - Scales everything perfectly */
+        /* THE GAME WRAPPER - This scales everything inside it */
         #gameWrapper {
             position: relative;
             width: 800px;
@@ -29,7 +28,7 @@
             box-shadow: 0 0 50px rgba(0,0,0,0.5);
             background-color: #000;
             overflow: hidden;
-            transform-origin: center center;
+            transform-origin: center center; /* Scale from center */
         }
 
         canvas {
@@ -58,7 +57,7 @@
 
         /* --- BUTTON STYLES --- */
         
-        /* Purple Button */
+        /* 1. Purple Button (Start & Lose Screen) */
         .purple-btn {
             padding: 16px 60px;
             font-size: 26px;
@@ -75,13 +74,13 @@
             letter-spacing: 1px;
             position: absolute;
             left: 50%;
-            bottom: 28%; 
+            bottom: 28%; /* Locked position relative to 800x600 canvas */
             transform: translateX(-50%);
             white-space: nowrap;
         }
         .purple-btn:active { transform: translateX(-50%) scale(0.95); }
 
-        /* White "Get More Socks" Button */
+        /* 2. White "Get More Socks" Button (Win Screen Only) */
         .win-btn {
             padding: 12px 35px;
             font-size: 20px;    
@@ -112,43 +111,36 @@
         }
         #endScreenControls > * { pointer-events: auto; }
 
-        /* --- NEW COMPACT JOYSTICK CONTROLS --- */
+        /* --- Mobile Controls --- */
         #mobileControls {
             position: absolute;
-            bottom: 40px; /* Moved UP from bottom */
-            right: 40px;  /* Moved IN from right */
+            bottom: 20px; right: 20px;
             z-index: 50;
-            display: grid;
-            grid-template-columns: repeat(3, 60px); /* 3 columns grid */
-            grid-template-rows: repeat(2, 60px);    /* 2 rows grid */
-            gap: 5px; /* Tiny gap between buttons */
-            opacity: 0.6; /* See-through */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.7;
         }
 
+        .control-row { display: flex; gap: 10px; }
         .d-btn {
-            width: 60px; height: 60px;
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(4px);
-            border: 2px solid rgba(255,255,255,0.5);
-            border-radius: 15px; /* Rounded squares like a keyboard key */
+            width: 70px; height: 70px; /* Base size, will scale down on phone */
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
             color: white;
-            font-size: 28px;
+            font-size: 30px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             touch-action: manipulation;
+            margin: 5px;
             user-select: none;
             pointer-events: auto;
         }
-        .d-btn:active { background: rgba(255, 255, 255, 0.5); transform: scale(0.95); }
-
-        /* Grid Positioning for Joystick Shape */
-        #btnUp    { grid-column: 2; grid-row: 1; }
-        #btnLeft  { grid-column: 1; grid-row: 2; }
-        #btnDown  { grid-column: 2; grid-row: 2; }
-        #btnRight { grid-column: 3; grid-row: 2; }
-
+        .d-btn:active { background: rgba(255, 255, 255, 0.4); transform: scale(0.95); }
 
         /* Game HUD */
         #statusMsg { 
@@ -211,9 +203,11 @@
 
     <div id="mobileControls" style="display:none;">
         <div class="d-btn" id="btnUp">↑</div>
-        <div class="d-btn" id="btnLeft">←</div>
-        <div class="d-btn" id="btnDown">↓</div>
-        <div class="d-btn" id="btnRight">→</div>
+        <div class="control-row">
+            <div class="d-btn" id="btnLeft">←</div>
+            <div class="d-btn" id="btnDown">↓</div>
+            <div class="d-btn" id="btnRight">→</div>
+        </div>
     </div>
 
     <div id="startScreen">
@@ -246,7 +240,8 @@ window.onload = function() {
     document.getElementById('startBtn').onclick = startGame;
     tryAgainBtn.onclick = resetGame;
 
-    // --- SCALING LOGIC ---
+    // --- NEW SCALING LOGIC ---
+    // This scales the entire game wrapper like an image
     function resizeGame() {
         const width = window.innerWidth;
         const height = window.innerHeight;
@@ -258,6 +253,9 @@ window.onload = function() {
         
         // Apply scale to wrapper
         wrapper.style.transform = `scale(${scale})`;
+        
+        // Center alignment fix for some browsers
+        // (The flex body handles centering, this just ensures size)
     }
     window.addEventListener('resize', resizeGame);
     resizeGame(); 
@@ -322,7 +320,7 @@ window.onload = function() {
         startScreen.style.display = 'none';
         inGameUI.style.display = 'block';
         statusMsg.style.display = 'block';
-        mobileControls.style.display = 'grid'; 
+        mobileControls.style.display = 'flex'; 
         sprintBarContainer.style.display = 'block';
         resetGame();
         loop();
@@ -331,7 +329,7 @@ window.onload = function() {
     function resetGame() {
         gameState = 'PLAYING';
         endScreenControls.style.display = 'none';
-        mobileControls.style.display = 'grid'; 
+        mobileControls.style.display = 'flex'; 
         sprintBarContainer.style.display = 'block';
         
         socksCollected = 0;
