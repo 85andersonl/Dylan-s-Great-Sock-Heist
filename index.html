@@ -53,7 +53,7 @@
             display: block; 
         }
 
-        /* --- BUTTON STYLES --- */
+        /* --- BUTTON STYLES (Desktop Default) --- */
         
         /* 1. Purple Button (Start & Lose Screen) */
         .purple-btn {
@@ -62,7 +62,7 @@
             background: linear-gradient(135deg, #b06ab3 0%, #450b5a 100%);
             color: white;
             border: 2px solid rgba(255,255,255,0.4);
-            border-radius: 50px; /* Pill shape */
+            border-radius: 50px; 
             cursor: pointer; 
             font-weight: 600;
             box-shadow: 0 8px 20px rgba(75, 0, 130, 0.4);
@@ -80,17 +80,16 @@
         .purple-btn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
 
         /* 2. White "Get More Socks" Button (Win Screen Only) */
-        /* 50% smaller, rectangular with smooth corners */
         .win-btn {
-            padding: 12px 35px; /* Smaller padding */
-            font-size: 18px;    /* Smaller font */
+            padding: 12px 35px;
+            font-size: 18px;    
             background: white;
             color: black;
             border: 2px solid #111;
-            border-radius: 15px; /* Smooth rectangle corners */
+            border-radius: 15px; 
             cursor: pointer; 
             font-weight: 800;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Nice shadow */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
             transition: all 0.2s;
             pointer-events: auto;
             text-transform: uppercase;
@@ -187,6 +186,42 @@
             font-weight: 800;
             text-shadow: 1px 1px 0px white; 
             letter-spacing: 1px;
+        }
+
+        /* --- MOBILE ADJUSTMENTS (MEDIA QUERIES) --- */
+        /* Only applies when screen width is 768px or less (Phones/Tablets) */
+        @media (max-width: 768px) {
+            .purple-btn {
+                padding: 12px 40px; /* Reduce padding */
+                font-size: 18px;    /* Reduce font size */
+                bottom: 25%;        /* Adjust position slightly */
+            }
+            
+            .win-btn {
+                padding: 10px 30px;
+                font-size: 16px;
+                bottom: 12%;
+            }
+
+            .d-btn {
+                width: 50px; height: 50px; /* Slightly smaller touch buttons */
+                font-size: 22px;
+            }
+
+            #inGameUI {
+                font-size: 18px;
+                padding: 6px 12px;
+            }
+
+            #sprintBarContainer {
+                top: 70px;
+                width: 120px;
+            }
+            
+            #statusMsg {
+                font-size: 18px;
+                bottom: 85px; /* Move above touch controls */
+            }
         }
     </style>
 </head>
