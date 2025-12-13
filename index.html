@@ -3,7 +3,7 @@
 <head>
     <title>Dylan's Great Sock Heist</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body {
             background-color: #1a1a1a;
@@ -53,7 +53,8 @@
             display: block; 
         }
 
-        /* --- PURPLE BUTTONS --- */
+        /* --- BUTTON STYLES --- */
+        /* Standard Purple Button (for Start Screen) */
         .purple-btn {
             padding: 16px 60px;
             font-size: 26px;
@@ -63,27 +64,47 @@
             border-radius: 50px;
             cursor: pointer; 
             font-weight: 600;
-            font-family: 'Fredoka', sans-serif;
             box-shadow: 0 8px 20px rgba(75, 0, 130, 0.4);
             transition: all 0.2s;
             pointer-events: auto;
             text-transform: uppercase;
             letter-spacing: 1px;
-            
-            /* Center the button absolutely */
             position: absolute;
             left: 50%;
             bottom: 28%; 
             transform: translateX(-50%);
         }
-
         .purple-btn:hover { transform: translateX(-50%) scale(1.05) translateY(-3px); }
         .purple-btn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
+
+        /* New White Button (for Win Screen) */
+        .white-btn {
+            padding: 18px 70px;
+            font-size: 28px;
+            background: white;
+            color: black;
+            border: 3px solid #111;
+            border-radius: 50px;
+            cursor: pointer; 
+            font-weight: 800;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+            pointer-events: auto;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: absolute;
+            left: 50%;
+            bottom: 12%; /* Lower position */
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+        .white-btn:hover { transform: translateX(-50%) scale(1.05) translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
+        .white-btn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
+
 
         /* --- END SCREEN --- */
         #endScreenControls { 
             display: none; 
-            /* We don't need flex centering because the button is absolute positioned now */
             pointer-events: none;
         }
         #endScreenControls > * { pointer-events: auto; }
@@ -194,7 +215,7 @@
     </div>
 
     <div id="endScreenControls">
-        <button id="tryAgainBtn" class="purple-btn">TRY AGAIN</button>
+        <button id="tryAgainBtn" class="white-btn">GET MORE SOCKS</button>
     </div>
 </div>
 
@@ -212,9 +233,8 @@ window.onload = function() {
     const sprintBarContainer = document.getElementById('sprintBarContainer');
     const sprintBarFill = document.getElementById('sprintBarFill');
     
-    // Load the Caught Image explicitly so we can draw it later
-    const caughtImg = new Image();
-    caughtImg.src = 'caught.jpg';
+    // Load Images
+    const caughtImg = new Image(); caughtImg.src = 'caught.jpg';
 
     document.getElementById('startBtn').onclick = startGame;
     document.getElementById('tryAgainBtn').onclick = resetGame;
@@ -244,6 +264,7 @@ window.onload = function() {
     const headStartDuration = 3000; 
     let moveStartTime = 0; 
     let isSprinting = false;
+    let winStartTime = 0;
 
     let dylan = { x: 400, y: 400, w: 80, h: 55, baseSpeed: 5, speed: 5, dirX: 1, isMoving: false };
     let melissa = { x: -100, y: 400, w: 50, h: 110, speed: 3.2, dirX: 1 };
@@ -313,6 +334,7 @@ window.onload = function() {
         startTime = Date.now();
         moveStartTime = 0; 
         sprintBarFill.style.width = "0%";
+        winStartTime = 0;
         
         dylan.x = 400; dylan.y = 400;
         melissa.x = -150; melissa.y = 400;
@@ -395,8 +417,7 @@ window.onload = function() {
 
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(35, -15 + moveBounce, 24, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.ellipse(28, -25 + moveBounce, 10, 18, -0.5, 0, Math.PI * 2); ctx.fill(); 
-        ctx.fillStyle = "white"; 
-        ctx.beginPath(); ctx.ellipse(35, -15 + moveBounce, 6, 18, 0, 0, Math.PI * 2); ctx.fill(); 
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(35, -15 + moveBounce, 6, 18, 0, 0, Math.PI * 2); ctx.fill(); 
         ctx.beginPath(); ctx.ellipse(38, -8 + moveBounce, 12, 10, 0, 0, Math.PI * 2); ctx.fill(); 
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(42, -12 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
         ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(36, -20 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
@@ -521,13 +542,12 @@ window.onload = function() {
         mobileControls.style.display = 'none'; 
         sprintBarContainer.style.display = 'none';
         statusMsg.innerText = "";
+        if(gameState === 'WON') winStartTime = Date.now();
     }
 
     function draw() {
         if(gameState === 'START') return;
-
         ctx.clearRect(0,0, canvas.width, canvas.height);
-
         if (gameState === 'WON') { drawWinScene(); return; }
         if (gameState === 'LOST') { drawLoseScene(); return; }
 
@@ -541,15 +561,17 @@ window.onload = function() {
         }
     }
 
-    function drawTree(x, y) {
-        ctx.fillStyle = "#5d4037"; ctx.fillRect(x, y, 20, 60);
+    function drawTree(x, y, scale=1) {
+        ctx.save(); ctx.translate(x,y); ctx.scale(scale, scale);
+        ctx.fillStyle = "#5d4037"; ctx.fillRect(0, 0, 20, 60);
         ctx.fillStyle = "#388e3c"; 
-        ctx.beginPath(); ctx.arc(x+10, y-10, 30, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(x-10, y+10, 25, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(x+30, y+5, 25, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(10, -10, 30, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-10, 10, 25, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(30, 5, 25, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
     }
     function drawFence(x, y) {
-        ctx.fillStyle = "#c19a6b"; 
+        ctx.fillStyle = "#ffffff"; // White fence
         ctx.fillRect(x, y, 15, 50); ctx.fillRect(x+40, y, 15, 50);
         ctx.fillRect(x-10, y+10, 70, 8); ctx.fillRect(x-10, y+30, 70, 8);
     }
@@ -561,6 +583,31 @@ window.onload = function() {
         ctx.fillStyle = "#757575"; ctx.beginPath(); ctx.arc(x+65, y+50, 3, 0, Math.PI*2); ctx.fill();
     }
 
+    function drawPig(x, y, dir) {
+        ctx.save(); ctx.translate(x, y); if(dir === -1) ctx.scale(-1,1);
+        let bounce = Math.sin(frame * 0.2) * 3;
+        ctx.fillStyle = "#ffcccb"; // Pink body
+        ctx.beginPath(); ctx.ellipse(0, 20+bounce, 30, 20, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(25, 15+bounce, 15, 0, Math.PI*2); ctx.fill(); // Head
+        ctx.fillStyle = "#ffb6c1"; ctx.beginPath(); ctx.ellipse(35, 15+bounce, 8, 6, 0, 0, Math.PI*2); ctx.fill(); // Snout
+        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(28, 12+bounce, 2, 0, Math.PI*2); ctx.fill(); // Eye
+        ctx.strokeStyle = "#ffcccb"; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(-25, 20+bounce); ctx.quadraticCurveTo(-35, 10+bounce, -30, 25+bounce); ctx.stroke(); // Tail
+        ctx.fillStyle = "#ffcccb"; ctx.fillRect(-15, 35+bounce, 8, 15); ctx.fillRect(5, 35+bounce, 8, 15); // Legs
+        ctx.restore();
+    }
+
+    function drawSmallDog(x, y, dir) {
+        ctx.save(); ctx.translate(x, y); ctx.scale(0.7, 0.7); if(dir === -1) ctx.scale(-1,1);
+        let bounce = Math.sin(frame * 0.3) * 3;
+        ctx.fillStyle = "black"; ctx.beginPath(); ctx.ellipse(0, 20+bounce, 30, 18, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "white"; ctx.fillRect(-5, 25+bounce, 15, 15);
+        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(25, 15+bounce, 14, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(28, 15+bounce, 6, 10, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(30, 13+bounce, 2, 0, Math.PI*2); ctx.fill();
+        ctx.fillRect(-15, 35+bounce, 8, 15); ctx.fillRect(5, 35+bounce, 8, 15);
+        ctx.restore();
+    }
+
     function drawWinScene() {
         frame++;
         let grad = ctx.createLinearGradient(0, 0, 0, 600);
@@ -568,32 +615,42 @@ window.onload = function() {
         ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
         
         ctx.fillStyle = "#66bb6a"; ctx.fillRect(0, 300, canvas.width, 300);
-        for(let i=0; i<canvas.width; i+=60) { drawTree(i-30, 280); drawFence(i, 300); }
-        drawShed(50, 350); drawTree(650, 350); drawTree(720, 380); drawTree(580, 400);
+        // Taller background trees (moved up y-axis)
+        for(let i=0; i<canvas.width; i+=60) { drawTree(i-30, 260); drawFence(i, 300); }
+        drawShed(50, 350); 
+        // Bigger foreground trees (scaled up)
+        drawTree(650, 330, 1.5); drawTree(740, 360, 1.4); drawTree(560, 380, 1.3);
 
-        let runX = 400 + Math.sin(frame * 0.05) * 300;
-        let runY = 400 + Math.cos(frame * 0.07) * 50; 
+        // Dylan
+        let runX = 400 + Math.sin(frame * 0.05) * 250;
         let runDir = Math.cos(frame * 0.05) > 0 ? 1 : -1;
-        drawDylan(runX, runY, runDir, true);
+        dylan.isMoving = true; drawDylan(runX, 400, runDir, true);
+
+        // Pig
+        let pigX = 150 + Math.sin(frame * 0.07) * 100;
+        drawPig(pigX, 420, Math.cos(frame * 0.07) > 0 ? 1 : -1);
+
+        // Small Dog (joins after 3s)
+        if (Date.now() - winStartTime > 3000) {
+             let dogX = 600 + Math.cos(frame * 0.06) * 150;
+             drawSmallDog(dogX, 430, -Math.sin(frame * 0.06) > 0 ? 1 : -1);
+        }
 
         ctx.font = "bold 50px Fredoka"; ctx.textAlign = "center"; 
         ctx.fillStyle = "white"; ctx.shadowColor="rgba(0,0,0,0.3)"; ctx.shadowBlur=10;
         ctx.fillText("FREEDOM!", 400, 100); ctx.shadowBlur=0;
-        
         ctx.font = "24px Fredoka"; 
         ctx.fillText("Dylan is free in the garden!", 400, 150);
     }
 
     function drawLoseScene() {
-        // Draw the uploaded image for the lose scene
         if (caughtImg.complete) {
             ctx.drawImage(caughtImg, 0, 0, canvas.width, canvas.height);
         } else {
-            // Fallback if image fails
             let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
             grad.addColorStop(0, "#a8c0ff"); grad.addColorStop(1, "#3f2b96"); 
             ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
-            ctx.fillStyle = "white"; ctx.fillText("CAUGHT!", 400, 300);
+            ctx.fillStyle = "white"; ctx.fillText("CAUGHT! (Image not loaded)", 400, 300);
         }
     }
 
