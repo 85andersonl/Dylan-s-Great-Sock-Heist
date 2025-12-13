@@ -45,7 +45,6 @@
 
         /* --- START SCREEN --- */
         #startScreen {
-            /* This looks for your uploaded image */
             background-image: url('cover.jpg'); 
             background-size: cover;
             background-position: center;
@@ -70,26 +69,21 @@
             pointer-events: auto;
             text-transform: uppercase;
             letter-spacing: 1px;
-        }
-
-        .purple-btn:hover { transform: scale(1.05) translateY(-3px); }
-        .purple-btn:active { transform: scale(0.95) translateY(2px); }
-
-        /* Start Button Positioning */
-        #startBtn {
+            
+            /* Center the button absolutely */
             position: absolute;
             left: 50%;
             bottom: 28%; 
             transform: translateX(-50%);
         }
 
+        .purple-btn:hover { transform: translateX(-50%) scale(1.05) translateY(-3px); }
+        .purple-btn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
+
         /* --- END SCREEN --- */
         #endScreenControls { 
             display: none; 
-            flex-direction: column;
-            justify-content: flex-end; 
-            align-items: center;
-            padding-bottom: 50px;
+            /* We don't need flex centering because the button is absolute positioned now */
             pointer-events: none;
         }
         #endScreenControls > * { pointer-events: auto; }
@@ -218,6 +212,10 @@ window.onload = function() {
     const sprintBarContainer = document.getElementById('sprintBarContainer');
     const sprintBarFill = document.getElementById('sprintBarFill');
     
+    // Load the Caught Image explicitly so we can draw it later
+    const caughtImg = new Image();
+    caughtImg.src = 'caught.jpg';
+
     document.getElementById('startBtn').onclick = startGame;
     document.getElementById('tryAgainBtn').onclick = resetGame;
 
@@ -410,9 +408,7 @@ window.onload = function() {
     }
 
     function drawMelissa(x, y, dir, isAngry, scale=1) {
-        ctx.save();
-        ctx.translate(x + melissa.w/2, y + melissa.h/2);
-        ctx.scale(scale, scale);
+        ctx.save(); ctx.translate(x + melissa.w/2, y + melissa.h/2); ctx.scale(scale, scale);
         if (dir === -1) ctx.scale(-1, 1);
 
         let sway = isAngry ? 0 : Math.sin(frame * 0.1) * 2;
@@ -472,21 +468,18 @@ window.onload = function() {
             if (duration > 2000) {
                 currentSpeed = 10; 
                 isSprinting = true;
-                sprintBarFill.style.background = "#00FF00"; // Bright Green
+                sprintBarFill.style.background = "#00FF00"; 
             } else {
                 isSprinting = false;
-                sprintBarFill.style.background = "#32CD32"; // Darker Green
+                sprintBarFill.style.background = "#32CD32"; 
             }
         }
 
-        // Updated Movement: Allows walking UP to y=150 (closer to door)
         if (keys['ArrowUp'] && dylan.y > 150) { dylan.y -= currentSpeed; dylan.isMoving = true; }
         if (keys['ArrowDown'] && dylan.y + dylan.h < 600) { dylan.y += currentSpeed; dylan.isMoving = true; }
         if (keys['ArrowLeft'] && dylan.x > 0) { dylan.x -= currentSpeed; dylan.dirX = -1; dylan.isMoving = true; }
         if (keys['ArrowRight'] && dylan.x + dylan.w < 800) { dylan.x += currentSpeed; dylan.dirX = 1; dylan.isMoving = true; }
 
-        // Door Collision Logic (Fixed Zone)
-        // Checks if Dylan is near door X, and has walked UP far enough (y < 230)
         if (dylan.x > door.x - 20 && dylan.x < door.x + door.w + 20 && dylan.y < 230) {
              if (socksCollected >= socksNeeded) {
                  gameState = 'WON'; endGame();
@@ -548,18 +541,6 @@ window.onload = function() {
         }
     }
 
-    function roundRect(x, y, w, h, radius) {
-        if (w < 2 * radius) radius = w / 2;
-        if (h < 2 * radius) radius = h / 2;
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.arcTo(x + w, y, x + w, y + h, radius);
-        ctx.arcTo(x + w, y + h, x, y + h, radius);
-        ctx.arcTo(x, y + h, x, y, radius);
-        ctx.arcTo(x, y, x + w, y, radius);
-        ctx.closePath();
-    }
-
     function drawTree(x, y) {
         ctx.fillStyle = "#5d4037"; ctx.fillRect(x, y, 20, 60);
         ctx.fillStyle = "#388e3c"; 
@@ -604,28 +585,16 @@ window.onload = function() {
     }
 
     function drawLoseScene() {
-        let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        grad.addColorStop(0, "#a8c0ff"); grad.addColorStop(1, "#3f2b96"); 
-        ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
-
-        ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
-        roundRect(100, 100, 600, 400, 30);
-        ctx.fill();
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)"; ctx.lineWidth = 2;
-        ctx.stroke();
-
-        drawMelissa(200, 320, 1, true, 1.5); 
-        drawDylan(600, 350, -1, false, 1.5); 
-
-        ctx.font = "bold 50px Fredoka"; ctx.textAlign = "center"; 
-        ctx.fillStyle = "#ff6b6b"; ctx.shadowColor="rgba(0,0,0,0.1)"; ctx.shadowBlur=5;
-        ctx.fillText("CAUGHT!", 400, 180); ctx.shadowBlur=0;
-        
-        ctx.font = "600 26px Fredoka"; ctx.fillStyle = "#333";
-        ctx.fillText('"No Dylan, these socks are for Dobby!"', 400, 240);
-        
-        ctx.font = "20px Fredoka"; ctx.fillStyle = "#fff";
-        ctx.fillText("(Melissa took them all away)", 400, 280);
+        // Draw the uploaded image for the lose scene
+        if (caughtImg.complete) {
+            ctx.drawImage(caughtImg, 0, 0, canvas.width, canvas.height);
+        } else {
+            // Fallback if image fails
+            let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            grad.addColorStop(0, "#a8c0ff"); grad.addColorStop(1, "#3f2b96"); 
+            ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
+            ctx.fillStyle = "white"; ctx.fillText("CAUGHT!", 400, 300);
+        }
     }
 
     function loop() {
