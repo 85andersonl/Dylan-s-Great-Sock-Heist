@@ -45,53 +45,53 @@
 
         /* --- START SCREEN --- */
         #startScreen {
-            /* This loads your uploaded image */
             background-image: url('cover.jpg'); 
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            
-            /* Fallback color if image is missing */
             background-color: #1a1a1a; 
-
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end; /* Align button to bottom area */
-            align-items: center;
-            padding-bottom: 13%; /* Push button up slightly */
+            display: block; 
         }
 
-        /* --- THE ANIMATED START BUTTON --- */
-        #startBtn {
-            padding: 18px 70px;
-            font-size: 28px;
-            /* Matches the image style */
-            background: linear-gradient(90deg, #9d50bb 0%, #6e48aa 100%); 
+        /* --- PURPLE BUTTONS (Shared Style) --- */
+        .purple-btn {
+            padding: 16px 60px;
+            font-size: 26px;
+            background: linear-gradient(135deg, #b06ab3 0%, #450b5a 100%);
             color: white;
-            border: 3px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.4);
             border-radius: 50px;
             cursor: pointer; 
             font-weight: 600;
             font-family: 'Fredoka', sans-serif;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-            
-            /* Animation transitions */
+            box-shadow: 0 8px 20px rgba(75, 0, 130, 0.4);
             transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: auto;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        /* HOVER: Moves up/scales up */
-        #startBtn:hover {
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 15px 35px rgba(138, 43, 226, 0.6);
-            background: linear-gradient(90deg, #a862c3 0%, #7d5ab5 100%);
+        .purple-btn:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 12px 30px rgba(75, 0, 130, 0.6);
+            background: linear-gradient(135deg, #c47ac7 0%, #580e72 100%);
         }
 
-        /* CLICK: Pushes in */
-        #startBtn:active {
-            transform: translateY(2px) scale(0.95);
+        .purple-btn:active {
+            transform: scale(0.95) translateY(2px);
             box-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
+
+        /* Start Button Positioning */
+        #startBtn {
+            position: absolute;
+            left: 50%;
+            bottom: 30%;
+            transform: translateX(-50%);
+        }
+        #startBtn:hover { transform: translateX(-50%) scale(1.05) translateY(-3px); }
+        #startBtn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
+
 
         /* --- END SCREEN --- */
         #endScreenControls { 
@@ -99,26 +99,10 @@
             flex-direction: column;
             justify-content: flex-end; 
             align-items: center;
-            padding-bottom: 90px;
+            padding-bottom: 50px;
             pointer-events: none;
         }
         #endScreenControls > * { pointer-events: auto; }
-
-        #tryAgainBtn {
-            padding: 16px 60px;
-            font-size: 24px;
-            background: linear-gradient(90deg, #8A2BE2 0%, #008080 100%);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer; 
-            font-weight: 600;
-            font-family: 'Fredoka', sans-serif;
-            box-shadow: 0 5px 20px rgba(138, 43, 226, 0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        #tryAgainBtn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(138, 43, 226, 0.6); }
-        #tryAgainBtn:active { transform: scale(0.98); }
 
         /* --- Mobile Controls --- */
         #mobileControls {
@@ -189,11 +173,11 @@
     </div>
 
     <div id="startScreen">
-        <button id="startBtn">START GAME</button>
+        <button id="startBtn" class="purple-btn">START GAME</button>
     </div>
 
     <div id="endScreenControls">
-        <button id="tryAgainBtn">TRY AGAIN</button>
+        <button id="tryAgainBtn" class="purple-btn">TRY AGAIN</button>
     </div>
 </div>
 
@@ -329,25 +313,21 @@ window.onload = function() {
         // Mint Wall
         ctx.fillStyle = "#e0f2f1"; 
         ctx.fillRect(0,0, canvas.width, 200);
-        
         // Wood Floor
         let floorGrad = ctx.createLinearGradient(0, 200, 0, 600);
         floorGrad.addColorStop(0, "#d7ccc8"); 
         floorGrad.addColorStop(1, "#8d6e63"); 
         ctx.fillStyle = floorGrad; ctx.fillRect(0, 200, canvas.width, 400);
-        
         ctx.strokeStyle = "rgba(0,0,0,0.05)"; ctx.lineWidth = 2;
         for(let i=0; i<canvas.width; i+= 80) {
             ctx.beginPath(); ctx.moveTo(i, 200); ctx.lineTo(i-150, 600); ctx.stroke();
         }
-
         // Door
         ctx.fillStyle = (socksCollected >= socksNeeded) ? "#fff" : "#4e342e"; 
         ctx.fillRect(door.x, door.y, door.w, door.h);
         ctx.strokeStyle = "#3e2723"; ctx.lineWidth = 6;
         ctx.strokeRect(door.x-3, door.y-3, door.w+6, door.h+6);
         ctx.fillStyle = "#212121"; ctx.fillRect(door.x+10, door.y+70, door.w-20, 50);
-        
         ctx.font = "bold 16px Fredoka"; ctx.textAlign = "center"; ctx.fillStyle = "#3e2723"; 
         ctx.fillText("DOGGY DOOR", door.x + door.w/2, door.y - 10);
     }
@@ -371,7 +351,6 @@ window.onload = function() {
         ctx.scale(scale, scale);
         if (dir === -1) ctx.scale(-1, 1);
 
-        // Turbo Sparks
         if (isSprinting && gameState === 'PLAYING') {
             ctx.fillStyle = `hsl(${frame * 20}, 100%, 70%)`; 
             for(let i=0; i<3; i++) {
@@ -385,50 +364,43 @@ window.onload = function() {
         let legMove = dylan.isMoving ? Math.sin(frame * (isSprinting ? 0.8 : 0.4)) * 10 : 0;
 
         // === DYLAN (Black & White Bernese) ===
-        // Legs (Black with White Paws)
-        ctx.fillStyle = "#111"; // Black legs
+        // Legs 
+        ctx.fillStyle = "#111"; 
         ctx.fillRect(-25 + legMove, 20, 12, 30); ctx.fillRect(15 - legMove, 20, 12, 30); 
         ctx.fillRect(-35 - legMove, 25, 12, 30); ctx.fillRect(20 + legMove, 25, 12, 30); 
-        ctx.fillStyle = "white"; // White Paws
+        ctx.fillStyle = "white"; 
         ctx.fillRect(-25 + legMove, 45, 12, 5); ctx.fillRect(15 - legMove, 45, 12, 5);
         ctx.fillRect(-35 - legMove, 50, 12, 5); ctx.fillRect(20 + legMove, 50, 12, 5);
 
-        // Tail (Black with White Tip)
+        // Tail
         let tailWag = Math.sin(frame * (isSprinting ? 1.0 : 0.5)) * 20;
         ctx.strokeStyle = "#111"; ctx.lineWidth = 14; ctx.lineCap = "round";
         ctx.beginPath(); ctx.moveTo(-35, 5); ctx.quadraticCurveTo(-60, -10 + tailWag, -75, 5 + tailWag); ctx.stroke();
-        ctx.strokeStyle = "white"; ctx.lineWidth = 10; // White Tip
+        ctx.strokeStyle = "white"; ctx.lineWidth = 10; 
         ctx.beginPath(); ctx.moveTo(-70, 0 + tailWag); ctx.lineTo(-76, 5 + tailWag); ctx.stroke();
 
-        // Body (Black)
+        // Body
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.ellipse(0, 5 + moveBounce, 45, 30, 0, 0, Math.PI * 2); ctx.fill();
-        
-        // White Chest (Big Patch)
-        ctx.fillStyle = "white"; 
-        ctx.beginPath(); 
+        // White Chest 
+        ctx.fillStyle = "white"; ctx.beginPath(); 
         ctx.moveTo(-10, 10 + moveBounce); ctx.lineTo(30, 10 + moveBounce); 
         ctx.lineTo(25, 38 + moveBounce); ctx.lineTo(-5, 38 + moveBounce); ctx.fill();
 
-        // Head (Black)
+        // Head 
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(35, -15 + moveBounce, 24, 0, Math.PI * 2); ctx.fill();
-        // Ears (Black Floppy)
         ctx.beginPath(); ctx.ellipse(28, -25 + moveBounce, 10, 18, -0.5, 0, Math.PI * 2); ctx.fill(); 
-
         // White Muzzle & Blaze
         ctx.fillStyle = "white"; 
-        ctx.beginPath(); ctx.ellipse(35, -15 + moveBounce, 6, 18, 0, 0, Math.PI * 2); ctx.fill(); // Stripe up face
-        ctx.beginPath(); ctx.ellipse(38, -8 + moveBounce, 12, 10, 0, 0, Math.PI * 2); ctx.fill(); // Muzzle
-
-        // Face Details
-        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(42, -12 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); // Nose
-        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(36, -20 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); // Eye
+        ctx.beginPath(); ctx.ellipse(35, -15 + moveBounce, 6, 18, 0, 0, Math.PI * 2); ctx.fill(); 
+        ctx.beginPath(); ctx.ellipse(38, -8 + moveBounce, 12, 10, 0, 0, Math.PI * 2); ctx.fill(); 
+        // Face
+        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(42, -12 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(36, -20 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(37, -20 + moveBounce, 1.5, 0, Math.PI * 2); ctx.fill(); 
 
         if (hasSocks) {
-            // Sock hanging from mouth
             drawRealSock(45, -8 + moveBounce, socks[0] ? socks[0].color1 : "#FF69B4", "white", 0.6);
         } else {
-             // Pink Tongue
              ctx.fillStyle = "#ff8a80"; ctx.beginPath(); ctx.ellipse(42, -5+moveBounce, 5, 8, 0.5, 0, Math.PI*2); ctx.fill();
         }
         ctx.restore();
@@ -443,34 +415,24 @@ window.onload = function() {
         let sway = isAngry ? 0 : Math.sin(frame * 0.1) * 2;
         let hairFlow = isAngry ? 0 : Math.sin(frame * 0.15) * 5;
 
-        // Hair (Purple/Black)
-        ctx.fillStyle = "#8A2BE2"; // Purple under
-        ctx.beginPath(); ctx.moveTo(0, -50); ctx.bezierCurveTo(-50, -20, -60 + hairFlow, 20, -40 + hairFlow, 60); ctx.lineTo(15, -30); ctx.fill();
-        ctx.fillStyle = "#111"; // Black top
-        ctx.beginPath(); ctx.moveTo(0, -50); ctx.bezierCurveTo(-45, -20, -55 + hairFlow, 10, -35 + hairFlow, 50); ctx.lineTo(15, -30); ctx.fill();
-        
-        // Robe (Black with Gryffindor Red lining)
-        ctx.fillStyle = "#740001"; // Gryffindor Red (Inside Cape)
-        ctx.beginPath(); ctx.moveTo(5, -30); ctx.lineTo(-30, 55); ctx.lineTo(30, 55); ctx.lineTo(15, -30); ctx.fill();
-        ctx.fillStyle = "#1a1a1a"; // Outer Robe
-        ctx.beginPath(); ctx.moveTo(5, -30); ctx.lineTo(-20, 55); ctx.lineTo(20, 55); ctx.lineTo(15, -30); ctx.fill();
-        
+        // Hair
+        ctx.fillStyle = "#8A2BE2"; ctx.beginPath(); ctx.moveTo(0, -50); ctx.bezierCurveTo(-50, -20, -60 + hairFlow, 20, -40 + hairFlow, 60); ctx.lineTo(15, -30); ctx.fill();
+        ctx.fillStyle = "#111"; ctx.beginPath(); ctx.moveTo(0, -50); ctx.bezierCurveTo(-45, -20, -55 + hairFlow, 10, -35 + hairFlow, 50); ctx.lineTo(15, -30); ctx.fill();
+        // Robe
+        ctx.fillStyle = "#740001"; ctx.beginPath(); ctx.moveTo(5, -30); ctx.lineTo(-30, 55); ctx.lineTo(30, 55); ctx.lineTo(15, -30); ctx.fill();
+        ctx.fillStyle = "#1a1a1a"; ctx.beginPath(); ctx.moveTo(5, -30); ctx.lineTo(-20, 55); ctx.lineTo(20, 55); ctx.lineTo(15, -30); ctx.fill();
         // Trim
         ctx.fillStyle = "#740001"; ctx.fillRect(-15, -25, 6, 80); ctx.fillRect(15, -25, 6, 80);
-        
-        // Head (Spanish / Tan Skin)
-        ctx.fillStyle = "#e0ac69"; // Tan skin
-        ctx.beginPath(); ctx.arc(5, -35 + sway, 13, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(10, -35 + sway, 2, 0, Math.PI*2); ctx.fill(); // Eye
-        
+        // Head
+        ctx.fillStyle = "#e0ac69"; ctx.beginPath(); ctx.arc(5, -35 + sway, 13, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(10, -35 + sway, 2, 0, Math.PI*2); ctx.fill(); 
         // Hat
         ctx.save(); ctx.translate(2, -45 + sway); ctx.rotate(-0.1);
-        ctx.fillStyle = "#111"; ctx.beginPath(); ctx.ellipse(0, 0, 28, 6, 0, 0, Math.PI*2); ctx.fill(); // Brim
-        ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(0, -50); ctx.lineTo(18, 0); ctx.fill(); // Cone
-        ctx.fillStyle = "#740001"; ctx.fillRect(-14, -8, 28, 5); // Red Band
+        ctx.fillStyle = "#111"; ctx.beginPath(); ctx.ellipse(0, 0, 28, 6, 0, 0, Math.PI*2); ctx.fill(); 
+        ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(0, -50); ctx.lineTo(18, 0); ctx.fill(); 
+        ctx.fillStyle = "#740001"; ctx.fillRect(-14, -8, 28, 5); 
         ctx.restore();
 
-        // Arms
         if (isAngry) {
             ctx.strokeStyle = "#e0ac69"; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(-15, 10); ctx.stroke();
@@ -485,92 +447,17 @@ window.onload = function() {
         ctx.restore();
     }
 
-    // --- Update Loop ---
-    function update() {
-        if (gameState !== 'PLAYING') return;
-        frame++;
-
-        let elapsed = Date.now() - startTime;
-        let remainingHeadStart = Math.ceil((headStartDuration - elapsed) / 1000);
-
-        if (remainingHeadStart > 0) {
-            statusMsg.innerText = `Melissa enters in: ${remainingHeadStart}`;
-            statusMsg.style.color = "white";
-        } else if (remainingHeadStart <= 0 && melissa.x < -50) {
-             statusMsg.innerText = "MELISSA IS HERE! RUN!"; statusMsg.style.color = "#FF1493"; 
-        } else if (socksCollected < socksNeeded) {
-             statusMsg.innerText = ""; 
-        }
-
-        dylan.isMoving = false;
-        let currentSpeed = dylan.baseSpeed;
-        
-        if (moveStartTime > 0 && (Date.now() - moveStartTime > 2000)) {
-            currentSpeed = 12; isSprinting = true;
-        } else {
-            isSprinting = false;
-        }
-
-        if (keys['ArrowUp'] && dylan.y > 180) { dylan.y -= currentSpeed; dylan.isMoving = true; }
-        if (keys['ArrowDown'] && dylan.y + dylan.h < 600) { dylan.y += currentSpeed; dylan.isMoving = true; }
-        if (keys['ArrowLeft'] && dylan.x > 0) { dylan.x -= currentSpeed; dylan.dirX = -1; dylan.isMoving = true; }
-        if (keys['ArrowRight'] && dylan.x + dylan.w < 800) { dylan.x += currentSpeed; dylan.dirX = 1; dylan.isMoving = true; }
-
-        if (remainingHeadStart <= 0) {
-            let dx = dylan.x - melissa.x;
-            let dy = dylan.y - melissa.y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist > 10) {
-                melissa.x += (dx/dist) * melissa.speed;
-                melissa.y += (dy/dist) * melissa.speed;
-                melissa.dirX = dx > 0 ? 1 : -1;
-            }
-            if (dist < 40) { gameState = 'LOST'; endGame(); }
-        }
-
-        for (let i = socks.length - 1; i >= 0; i--) {
-            let s = socks[i];
-            if (dylan.x < s.x + 30 && dylan.x + dylan.w > s.x && 
-                dylan.y < s.y + 30 && dylan.y + dylan.h > s.y) {
-                socks.splice(i, 1);
-                socksCollected++;
-                scoreSpan.innerText = socksCollected;
-                if (socksCollected >= socksNeeded) {
-                    statusMsg.innerText = "RUN TO THE DOGGY DOOR!";
-                    statusMsg.style.color = "#00FF00";
-                }
-            }
-        }
-
-        if (socksCollected >= socksNeeded) {
-            if (dylan.y < door.y + door.h && dylan.x > door.x - 20 && dylan.x < door.x + door.w + 20) {
-                gameState = 'WON'; endGame();
-            }
-        }
-    }
-
-    function endGame() {
-        endScreenControls.style.display = 'flex'; 
-        mobileControls.style.display = 'none'; 
-        statusMsg.innerText = "";
-    }
-
-    function draw() {
-        if(gameState === 'START') return;
-
-        ctx.clearRect(0,0, canvas.width, canvas.height);
-
-        if (gameState === 'WON') { drawWinScene(); return; }
-        if (gameState === 'LOST') { drawLoseScene(); return; }
-
-        drawEnvironment();
-        socks.forEach(s => drawRealSock(s.x, s.y, s.color1, s.color2));
-        drawDylan(dylan.x, dylan.y, dylan.dirX, socksCollected > 0);
-        
-        let elapsed = Date.now() - startTime;
-        if (elapsed > headStartDuration || melissa.x > -100) {
-             drawMelissa(melissa.x, melissa.y, melissa.dirX, false);
-        }
+    // --- Rounded Rect Helper for Glass Box ---
+    function roundRect(x, y, w, h, radius) {
+        if (w < 2 * radius) radius = w / 2;
+        if (h < 2 * radius) radius = h / 2;
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + w, y, x + w, y + h, radius);
+        ctx.arcTo(x + w, y + h, x, y + h, radius);
+        ctx.arcTo(x, y + h, x, y, radius);
+        ctx.arcTo(x, y, x + w, y, radius);
+        ctx.closePath();
     }
 
     function drawTree(x, y) {
@@ -580,6 +467,17 @@ window.onload = function() {
         ctx.beginPath(); ctx.arc(x-10, y+10, 25, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(x+30, y+5, 25, 0, Math.PI*2); ctx.fill();
     }
+
+    function drawFence(x, y) {
+        ctx.fillStyle = "#c19a6b"; // Tan wood color
+        // Posts
+        ctx.fillRect(x, y, 15, 50);
+        ctx.fillRect(x+40, y, 15, 50);
+        // Rails
+        ctx.fillRect(x-10, y+10, 70, 8);
+        ctx.fillRect(x-10, y+30, 70, 8);
+    }
+
     function drawShed(x, y) {
         ctx.fillStyle = "#f5f5f5"; ctx.fillRect(x, y, 100, 80);
         ctx.fillStyle = "#616161"; 
@@ -594,8 +492,18 @@ window.onload = function() {
         grad.addColorStop(0, "#a8c0ff"); grad.addColorStop(1, "#3f2b96"); 
         ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
         
+        // Grass area
         ctx.fillStyle = "#66bb6a"; ctx.fillRect(0, 300, canvas.width, 300);
-        drawShed(50, 350); drawTree(650, 350); drawTree(720, 380); drawTree(580, 400);
+        
+        // Background fence and trees
+        for(let i=0; i<canvas.width; i+=60) {
+            drawTree(i-30, 280); // Trees behind fence
+            drawFence(i, 300);   // Fence on horizon
+        }
+
+        // Foreground objects
+        drawShed(50, 350); 
+        drawTree(650, 350); drawTree(720, 380); drawTree(580, 400); // Original foreground trees
 
         let runX = 400 + Math.sin(frame * 0.05) * 300;
         let runY = 400 + Math.cos(frame * 0.07) * 50; 
@@ -611,20 +519,28 @@ window.onload = function() {
     }
 
     function drawLoseScene() {
-        let grad = ctx.createLinearGradient(0, 0, 0, 600);
-        grad.addColorStop(0, "#300030"); grad.addColorStop(1, "#000000"); 
+        let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        grad.addColorStop(0, "#a8c0ff"); grad.addColorStop(1, "#3f2b96");
         ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
 
-        drawMelissa(300, 300, 1, true); 
-        drawRealSock(360, 350, "red", "white"); drawRealSock(370, 340, "blue", "white"); drawRealSock(380, 355, "green", "white");
-        drawDylan(500, 320, -1, false);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+        roundRect(100, 100, 600, 400, 30);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)"; ctx.lineWidth = 2;
+        ctx.stroke();
+
+        drawMelissa(200, 320, 1, true, 1.5); 
+        drawDylan(600, 350, -1, false, 1.5); 
 
         ctx.font = "bold 50px Fredoka"; ctx.textAlign = "center"; 
-        ctx.fillStyle = "#ff5252"; ctx.shadowColor="rgba(0,0,0,0.5)"; ctx.shadowBlur=10;
-        ctx.fillText("CAUGHT!", 400, 150); ctx.shadowBlur=0;
+        ctx.fillStyle = "#ff6b6b"; ctx.shadowColor="rgba(0,0,0,0.1)"; ctx.shadowBlur=5;
+        ctx.fillText("CAUGHT!", 400, 180); ctx.shadowBlur=0;
         
-        ctx.font = "24px Fredoka"; ctx.fillStyle = "white";
-        ctx.fillText('"No Dylan, these socks are for Dobby!"', 400, 220);
+        ctx.font = "600 26px Fredoka"; ctx.fillStyle = "#333";
+        ctx.fillText('"No Dylan, these socks are for Dobby!"', 400, 240);
+        
+        ctx.font = "20px Fredoka"; ctx.fillStyle = "#fff";
+        ctx.fillText("(Melissa took them all away)", 400, 280);
     }
 
     function loop() {
@@ -635,7 +551,6 @@ window.onload = function() {
         }
     }
     
-    // Start animation immediately for the menu
     draw();
 };
 </script>
