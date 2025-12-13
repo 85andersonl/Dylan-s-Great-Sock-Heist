@@ -12,7 +12,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            font-family: 'Fredoka', sans-serif; /* Modern Soft Font */
+            font-family: 'Fredoka', sans-serif;
             overflow: hidden;
             color: white;
             touch-action: none; 
@@ -23,7 +23,7 @@
             width: 800px; 
             height: 600px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            border-radius: 20px; /* Softer corners */
+            border-radius: 20px;
             overflow: hidden;
             background-color: #000;
             border: 4px solid rgba(255,255,255,0.1);
@@ -35,85 +35,72 @@
             height: 100%;
         }
         
-        /* --- Modern Soft UI Overlays --- */
+        /* --- UI Overlays --- */
         #startScreen, #endScreenControls {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 20;
+            overflow: hidden;
+        }
+
+        /* --- START SCREEN WITH IMAGE --- */
+        #startScreen {
+            /* Using the provided image as the cover background */
+            background-image: url('https://file-service-default-114c67af0763a8a98e77.ingress-erytho.easywp.com/wp-content/uploads/2025/12/image_21.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            
+            /* Aligning the invisible button over the image's button */
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-end; /* Push to bottom */
             align-items: center;
-            /* The Start Screen Background is handled by Canvas now for the characters */
-            /* We just use this for text positioning */
-            z-index: 20;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-            pointer-events: none; /* Let clicks pass through to canvas buttons if needed */
+            padding-bottom: 13%; /* Adjust to match image button height */
         }
-        
-        /* Make content clickable */
-        #startScreen > *, #endScreenControls > * { pointer-events: auto; }
 
+        /* The real, clickable button (invisible but active) */
+        #startBtn {
+            width: 220px; /* Approx size of button in image */
+            height: 60px;
+            opacity: 0; /* Invisible so we see the nice image button underneath */
+            cursor: pointer;
+            border: none;
+            padding: 0;
+        }
+
+        /* --- END SCREEN --- */
         #endScreenControls { 
             display: none; 
+            flex-direction: column;
             justify-content: flex-end; 
+            align-items: center;
             padding-bottom: 90px;
+            pointer-events: none;
         }
+        #endScreenControls > * { pointer-events: auto; }
 
-        /* --- Typography --- */
-        h1 { 
-            margin: 0 0 15px 0; 
-            font-size: 55px; 
-            font-weight: 600;
-            color: #ffffff; 
-            /* Soft Shadow */
-            text-shadow: 0px 4px 10px rgba(138, 43, 226, 0.4); 
-            letter-spacing: 1px;
-            line-height: 1.1;
-        }
-        
-        /* Soft description text */
-        p { 
-            font-size: 20px; 
-            color: #f0f0f0; 
-            margin: 8px 0; 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            font-weight: 400;
-        }
-        
-        .tip {
-            margin-top: 20px;
-            font-size: 16px;
-            color: #e0e0e0;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px 16px;
-            border-radius: 20px;
-        }
-
-        /* --- Modern Gradient Button --- */
-        button {
+        /* --- IN-GAME BUTTONS (TRY AGAIN) --- */
+        #tryAgainBtn {
             padding: 16px 60px;
             font-size: 24px;
-            /* Gradient: Purple to Teal */
             background: linear-gradient(90deg, #8A2BE2 0%, #008080 100%);
             color: white;
             border: none;
             border-radius: 50px;
             cursor: pointer; 
             font-weight: 600;
-            margin-top: 30px;
             font-family: 'Fredoka', sans-serif;
             box-shadow: 0 5px 20px rgba(138, 43, 226, 0.4);
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        button:hover {
+        #tryAgainBtn:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(138, 43, 226, 0.6);
         }
-        button:active { transform: scale(0.98); }
+        #tryAgainBtn:active { transform: scale(0.98); }
 
-        /* --- Touch Controls (Subtle) --- */
+        /* --- Touch Controls --- */
         #mobileControls {
             position: absolute;
             bottom: 20px; right: 20px;
@@ -121,7 +108,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            opacity: 0.6; /* Softer look */
+            opacity: 0.6;
             transition: opacity 0.3s;
         }
         #mobileControls:hover, #mobileControls:active { opacity: 1; }
@@ -181,11 +168,7 @@
     </div>
 
     <div id="startScreen">
-        <h1>DYLAN'S GREAT<br>SOCK HEIST</h1>
-        <p>Collect all 15 socks to unlock the door.</p>
-        <p>Run to the garden before Melissa arrives!</p>
-        <div class="tip"><strong>TIP:</strong> Hold direction for 2s to SPRINT!</div>
-        <button id="startBtn">START GAME</button>
+        <button id="startBtn"></button>
     </div>
 
     <div id="endScreenControls">
@@ -238,7 +221,6 @@ window.onload = function() {
     let isSprinting = false;
 
     // --- Objects ---
-    // Dylan is bigger now (w: 80, h: 55) was (60, 40)
     let dylan = { x: 400, y: 400, w: 80, h: 55, baseSpeed: 6, speed: 6, dirX: 1, isMoving: false };
     let melissa = { x: -100, y: 400, w: 50, h: 110, speed: 3.5, dirX: 1 };
     const door = { x: 350, y: 60, w: 100, h: 120 }; 
@@ -321,7 +303,7 @@ window.onload = function() {
         }
     }
 
-    // --- ART ASSETS ---
+    // --- ART ASSETS (Gameplay Only) ---
 
     function drawEnvironment() {
         // Mint Wall
@@ -382,37 +364,37 @@ window.onload = function() {
         let moveBounce = dylan.isMoving ? Math.sin(frame * (isSprinting ? 0.8 : 0.4)) * 3 : 0;
         let legMove = dylan.isMoving ? Math.sin(frame * (isSprinting ? 0.8 : 0.4)) * 10 : 0;
 
-        // Big Bernese Legs (Black)
-        ctx.fillStyle = "#111"; 
+        // === DYLAN (Black & White Bernese) ===
+        // Legs (Black with White Paws)
+        ctx.fillStyle = "#111"; // Black legs
         ctx.fillRect(-25 + legMove, 20, 12, 30); ctx.fillRect(15 - legMove, 20, 12, 30); 
         ctx.fillRect(-35 - legMove, 25, 12, 30); ctx.fillRect(20 + legMove, 25, 12, 30); 
-        // White Paws
-        ctx.fillStyle = "white";
+        ctx.fillStyle = "white"; // White Paws
         ctx.fillRect(-25 + legMove, 45, 12, 5); ctx.fillRect(15 - legMove, 45, 12, 5);
         ctx.fillRect(-35 - legMove, 50, 12, 5); ctx.fillRect(20 + legMove, 50, 12, 5);
 
-        // Tail (Big & Fluffy)
+        // Tail (Black with White Tip)
         let tailWag = Math.sin(frame * (isSprinting ? 1.0 : 0.5)) * 20;
         ctx.strokeStyle = "#111"; ctx.lineWidth = 14; ctx.lineCap = "round";
         ctx.beginPath(); ctx.moveTo(-35, 5); ctx.quadraticCurveTo(-60, -10 + tailWag, -75, 5 + tailWag); ctx.stroke();
         ctx.strokeStyle = "white"; ctx.lineWidth = 10; // White Tip
         ctx.beginPath(); ctx.moveTo(-70, 0 + tailWag); ctx.lineTo(-76, 5 + tailWag); ctx.stroke();
 
-        // Body (Black & Big)
+        // Body (Black)
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.ellipse(0, 5 + moveBounce, 45, 30, 0, 0, Math.PI * 2); ctx.fill();
         
-        // White Chest (Bernese Cross)
+        // White Chest (Big Patch)
         ctx.fillStyle = "white"; 
         ctx.beginPath(); 
-        ctx.moveTo(0, 10 + moveBounce); ctx.lineTo(25, 10 + moveBounce); 
-        ctx.lineTo(20, 35 + moveBounce); ctx.lineTo(5, 38 + moveBounce); ctx.fill();
+        ctx.moveTo(-10, 10 + moveBounce); ctx.lineTo(30, 10 + moveBounce); 
+        ctx.lineTo(25, 38 + moveBounce); ctx.lineTo(-5, 38 + moveBounce); ctx.fill();
 
         // Head (Black)
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(35, -15 + moveBounce, 24, 0, Math.PI * 2); ctx.fill();
-        // Ears (Floppy)
+        // Ears (Black Floppy)
         ctx.beginPath(); ctx.ellipse(28, -25 + moveBounce, 10, 18, -0.5, 0, Math.PI * 2); ctx.fill(); 
 
-        // White Muzzle (Bernese Stripe)
+        // White Muzzle & Blaze
         ctx.fillStyle = "white"; 
         ctx.beginPath(); ctx.ellipse(35, -15 + moveBounce, 6, 18, 0, 0, Math.PI * 2); ctx.fill(); // Stripe up face
         ctx.beginPath(); ctx.ellipse(38, -8 + moveBounce, 12, 10, 0, 0, Math.PI * 2); ctx.fill(); // Muzzle
@@ -481,27 +463,6 @@ window.onload = function() {
             ctx.fillStyle = "#00ffff"; ctx.beginPath(); ctx.arc(45, -5, Math.random()*4+2, 0, Math.PI*2); ctx.fill();
         }
         ctx.restore();
-    }
-
-    function drawStartScene() {
-        // Soft Modern Gradient Background
-        let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        grad.addColorStop(0, "#a8c0ff"); // Light Blue
-        grad.addColorStop(1, "#3f2b96"); // Deep Purple
-        ctx.fillStyle = grad;
-        ctx.fillRect(0,0, canvas.width, canvas.height);
-
-        // Soft white overlay circle for focus
-        ctx.fillStyle = "rgba(255,255,255,0.1)";
-        ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2, 300, 0, Math.PI*2); ctx.fill();
-
-        // Draw Big Dylan on Right
-        // We simulate a frame count for animation
-        frame++;
-        drawDylan(550, 350, -1, true, 1.5); // 1.5x scale
-        
-        // Draw Melissa on Left
-        drawMelissa(150, 320, 1, false, 1.5); // 1.5x scale
     }
 
     // --- Update Loop ---
@@ -575,11 +536,9 @@ window.onload = function() {
     }
 
     function draw() {
-        if(gameState === 'START') {
-            drawStartScene();
-            requestAnimationFrame(draw); // Keep animating the start screen
-            return;
-        }
+        // If state is START, we do nothing on canvas. 
+        // The HTML background image handles it.
+        if(gameState === 'START') return;
 
         ctx.clearRect(0,0, canvas.width, canvas.height);
 
@@ -658,7 +617,7 @@ window.onload = function() {
         }
     }
     
-    // Start animation immediately for the menu
+    // Start the loop call.
     draw();
 };
 </script>
