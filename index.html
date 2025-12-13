@@ -49,11 +49,14 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            background-color: #1a1a1a; 
+            /* Gradient fallback in case image loads slow */
+            background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%), url('cover.jpg');
+            background-blend-mode: normal; 
+            
             display: block; 
         }
 
-        /* --- PURPLE BUTTONS (Shared Style) --- */
+        /* --- PURPLE BUTTONS --- */
         .purple-btn {
             padding: 16px 60px;
             font-size: 26px;
@@ -86,7 +89,7 @@
         #startBtn {
             position: absolute;
             left: 50%;
-            bottom: 30%;
+            bottom: 28%; /* Adjusted slightly for better alignment */
             transform: translateX(-50%);
         }
         #startBtn:hover { transform: translateX(-50%) scale(1.05) translateY(-3px); }
@@ -153,6 +156,26 @@
             border-radius: 30px;
             backdrop-filter: blur(4px);
         }
+        
+        /* Sprint Bar */
+        #sprintBarContainer {
+            position: absolute; top: 70px; left: 20px;
+            width: 150px; height: 10px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 5px;
+            border: 1px solid white;
+            display: none;
+        }
+        #sprintBarFill {
+            width: 0%; height: 100%;
+            background: #00ffff;
+            border-radius: 5px;
+            transition: width 0.1s;
+        }
+        #sprintLabel {
+            position: absolute; top: -20px; left: 0;
+            font-size: 12px; color: #00ffff; font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -161,6 +184,12 @@
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     
     <div id="inGameUI" style="display:none;">Socks: <span id="scoreSpan">0</span> / 15</div>
+    
+    <div id="sprintBarContainer">
+        <div id="sprintLabel">SPRINT CHARGE</div>
+        <div id="sprintBarFill"></div>
+    </div>
+
     <div id="statusMsg" style="display:none;"></div>
 
     <div id="mobileControls" style="display:none;">
@@ -193,6 +222,8 @@ window.onload = function() {
     const statusMsg = document.getElementById('statusMsg');
     const scoreSpan = document.getElementById('scoreSpan');
     const mobileControls = document.getElementById('mobileControls');
+    const sprintBarContainer = document.getElementById('sprintBarContainer');
+    const sprintBarFill = document.getElementById('sprintBarFill');
     
     document.getElementById('startBtn').onclick = startGame;
     document.getElementById('tryAgainBtn').onclick = resetGame;
@@ -222,12 +253,15 @@ window.onload = function() {
     const socksNeeded = 15; 
     let startTime;
     const headStartDuration = 3000; 
+    
+    // Sprint Vars
     let moveStartTime = 0; 
     let isSprinting = false;
+    let sprintCharge = 0; // 0 to 100
 
     // --- Objects ---
-    let dylan = { x: 400, y: 400, w: 80, h: 55, baseSpeed: 6, speed: 6, dirX: 1, isMoving: false };
-    let melissa = { x: -100, y: 400, w: 50, h: 110, speed: 3.5, dirX: 1 };
+    let dylan = { x: 400, y: 400, w: 80, h: 55, baseSpeed: 5, speed: 5, dirX: 1, isMoving: false };
+    let melissa = { x: -100, y: 400, w: 50, h: 110, speed: 3.2, dirX: 1 };
     const door = { x: 350, y: 60, w: 100, h: 120 }; 
     let socks = [];
 
@@ -239,10 +273,17 @@ window.onload = function() {
     });
     window.addEventListener('keyup', e => {
         keys[e.key] = false;
-        if (!keys['ArrowUp'] && !keys['ArrowDown'] && !keys['ArrowLeft'] && !keys['ArrowRight']) {
-            moveStartTime = 0; isSprinting = false;
-        }
+        checkSprintReset();
     });
+
+    function checkSprintReset() {
+        if (!keys['ArrowUp'] && !keys['ArrowDown'] && !keys['ArrowLeft'] && !keys['ArrowRight']) {
+            moveStartTime = 0; 
+            isSprinting = false;
+            sprintCharge = 0;
+            sprintBarFill.style.width = "0%";
+        }
+    }
 
     function setupTouchButton(id, keyName) {
         const btn = document.getElementById(id);
@@ -254,11 +295,7 @@ window.onload = function() {
         const release = (e) => { 
             e.preventDefault(); 
             keys[keyName] = false;
-            setTimeout(() => {
-                if(!keys['ArrowUp'] && !keys['ArrowDown'] && !keys['ArrowLeft'] && !keys['ArrowRight']) {
-                    moveStartTime = 0; isSprinting = false;
-                }
-            }, 10);
+            setTimeout(checkSprintReset, 20);
         };
         btn.addEventListener('touchstart', press);
         btn.addEventListener('touchend', release);
@@ -277,6 +314,7 @@ window.onload = function() {
         inGameUI.style.display = 'block';
         statusMsg.style.display = 'block';
         mobileControls.style.display = 'flex'; 
+        sprintBarContainer.style.display = 'block';
         resetGame();
         loop();
     }
@@ -285,12 +323,14 @@ window.onload = function() {
         gameState = 'PLAYING';
         endScreenControls.style.display = 'none';
         mobileControls.style.display = 'flex'; 
+        sprintBarContainer.style.display = 'block';
         
         socksCollected = 0;
         scoreSpan.innerText = 0;
         frame = 0;
         startTime = Date.now();
         moveStartTime = 0; 
+        sprintCharge = 0;
         
         dylan.x = 400; dylan.y = 400;
         melissa.x = -150; melissa.y = 400;
@@ -310,19 +350,14 @@ window.onload = function() {
     // --- ART ASSETS ---
 
     function drawEnvironment() {
-        // Mint Wall
-        ctx.fillStyle = "#e0f2f1"; 
-        ctx.fillRect(0,0, canvas.width, 200);
-        // Wood Floor
+        ctx.fillStyle = "#e0f2f1"; ctx.fillRect(0,0, canvas.width, 200);
         let floorGrad = ctx.createLinearGradient(0, 200, 0, 600);
-        floorGrad.addColorStop(0, "#d7ccc8"); 
-        floorGrad.addColorStop(1, "#8d6e63"); 
+        floorGrad.addColorStop(0, "#d7ccc8"); floorGrad.addColorStop(1, "#8d6e63"); 
         ctx.fillStyle = floorGrad; ctx.fillRect(0, 200, canvas.width, 400);
         ctx.strokeStyle = "rgba(0,0,0,0.05)"; ctx.lineWidth = 2;
         for(let i=0; i<canvas.width; i+= 80) {
             ctx.beginPath(); ctx.moveTo(i, 200); ctx.lineTo(i-150, 600); ctx.stroke();
         }
-        // Door
         ctx.fillStyle = (socksCollected >= socksNeeded) ? "#fff" : "#4e342e"; 
         ctx.fillRect(door.x, door.y, door.w, door.h);
         ctx.strokeStyle = "#3e2723"; ctx.lineWidth = 6;
@@ -352,6 +387,7 @@ window.onload = function() {
         if (dir === -1) ctx.scale(-1, 1);
 
         if (isSprinting && gameState === 'PLAYING') {
+            // SPARK EFFECT
             ctx.fillStyle = `hsl(${frame * 20}, 100%, 70%)`; 
             for(let i=0; i<3; i++) {
                 let sx = -50 - Math.random() * 20;
@@ -363,8 +399,6 @@ window.onload = function() {
         let moveBounce = dylan.isMoving ? Math.sin(frame * (isSprinting ? 0.8 : 0.4)) * 3 : 0;
         let legMove = dylan.isMoving ? Math.sin(frame * (isSprinting ? 0.8 : 0.4)) * 10 : 0;
 
-        // === DYLAN (Black & White Bernese) ===
-        // Legs 
         ctx.fillStyle = "#111"; 
         ctx.fillRect(-25 + legMove, 20, 12, 30); ctx.fillRect(15 - legMove, 20, 12, 30); 
         ctx.fillRect(-35 - legMove, 25, 12, 30); ctx.fillRect(20 + legMove, 25, 12, 30); 
@@ -372,28 +406,22 @@ window.onload = function() {
         ctx.fillRect(-25 + legMove, 45, 12, 5); ctx.fillRect(15 - legMove, 45, 12, 5);
         ctx.fillRect(-35 - legMove, 50, 12, 5); ctx.fillRect(20 + legMove, 50, 12, 5);
 
-        // Tail
         let tailWag = Math.sin(frame * (isSprinting ? 1.0 : 0.5)) * 20;
         ctx.strokeStyle = "#111"; ctx.lineWidth = 14; ctx.lineCap = "round";
         ctx.beginPath(); ctx.moveTo(-35, 5); ctx.quadraticCurveTo(-60, -10 + tailWag, -75, 5 + tailWag); ctx.stroke();
         ctx.strokeStyle = "white"; ctx.lineWidth = 10; 
         ctx.beginPath(); ctx.moveTo(-70, 0 + tailWag); ctx.lineTo(-76, 5 + tailWag); ctx.stroke();
 
-        // Body
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.ellipse(0, 5 + moveBounce, 45, 30, 0, 0, Math.PI * 2); ctx.fill();
-        // White Chest 
         ctx.fillStyle = "white"; ctx.beginPath(); 
         ctx.moveTo(-10, 10 + moveBounce); ctx.lineTo(30, 10 + moveBounce); 
         ctx.lineTo(25, 38 + moveBounce); ctx.lineTo(-5, 38 + moveBounce); ctx.fill();
 
-        // Head 
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(35, -15 + moveBounce, 24, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.ellipse(28, -25 + moveBounce, 10, 18, -0.5, 0, Math.PI * 2); ctx.fill(); 
-        // White Muzzle & Blaze
         ctx.fillStyle = "white"; 
         ctx.beginPath(); ctx.ellipse(35, -15 + moveBounce, 6, 18, 0, 0, Math.PI * 2); ctx.fill(); 
         ctx.beginPath(); ctx.ellipse(38, -8 + moveBounce, 12, 10, 0, 0, Math.PI * 2); ctx.fill(); 
-        // Face
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(42, -12 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
         ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(36, -20 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(37, -20 + moveBounce, 1.5, 0, Math.PI * 2); ctx.fill(); 
@@ -415,18 +443,13 @@ window.onload = function() {
         let sway = isAngry ? 0 : Math.sin(frame * 0.1) * 2;
         let hairFlow = isAngry ? 0 : Math.sin(frame * 0.15) * 5;
 
-        // Hair
         ctx.fillStyle = "#8A2BE2"; ctx.beginPath(); ctx.moveTo(0, -50); ctx.bezierCurveTo(-50, -20, -60 + hairFlow, 20, -40 + hairFlow, 60); ctx.lineTo(15, -30); ctx.fill();
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.moveTo(0, -50); ctx.bezierCurveTo(-45, -20, -55 + hairFlow, 10, -35 + hairFlow, 50); ctx.lineTo(15, -30); ctx.fill();
-        // Robe
         ctx.fillStyle = "#740001"; ctx.beginPath(); ctx.moveTo(5, -30); ctx.lineTo(-30, 55); ctx.lineTo(30, 55); ctx.lineTo(15, -30); ctx.fill();
         ctx.fillStyle = "#1a1a1a"; ctx.beginPath(); ctx.moveTo(5, -30); ctx.lineTo(-20, 55); ctx.lineTo(20, 55); ctx.lineTo(15, -30); ctx.fill();
-        // Trim
         ctx.fillStyle = "#740001"; ctx.fillRect(-15, -25, 6, 80); ctx.fillRect(15, -25, 6, 80);
-        // Head
         ctx.fillStyle = "#e0ac69"; ctx.beginPath(); ctx.arc(5, -35 + sway, 13, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(10, -35 + sway, 2, 0, Math.PI*2); ctx.fill(); 
-        // Hat
         ctx.save(); ctx.translate(2, -45 + sway); ctx.rotate(-0.1);
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.ellipse(0, 0, 28, 6, 0, 0, Math.PI*2); ctx.fill(); 
         ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(0, -50); ctx.lineTo(18, 0); ctx.fill(); 
@@ -447,7 +470,107 @@ window.onload = function() {
         ctx.restore();
     }
 
-    // --- Rounded Rect Helper for Glass Box ---
+    // --- Update Loop ---
+    function update() {
+        if (gameState !== 'PLAYING') return;
+        frame++;
+
+        let elapsed = Date.now() - startTime;
+        let remainingHeadStart = Math.ceil((headStartDuration - elapsed) / 1000);
+
+        if (remainingHeadStart > 0) {
+            statusMsg.innerText = `Melissa enters in: ${remainingHeadStart}`;
+            statusMsg.style.color = "white";
+        } else if (remainingHeadStart <= 0 && melissa.x < -50) {
+             statusMsg.innerText = "MELISSA IS HERE! RUN!"; statusMsg.style.color = "#FF1493"; 
+        } else if (socksCollected < socksNeeded) {
+             statusMsg.innerText = ""; 
+        }
+
+        dylan.isMoving = false;
+        let currentSpeed = dylan.baseSpeed;
+        
+        // --- FIXED SPRINT LOGIC ---
+        // If movement started and > 2s has passed
+        if (moveStartTime > 0) {
+            let duration = Date.now() - moveStartTime;
+            // Charge the bar
+            let charge = Math.min(100, (duration / 2000) * 100);
+            sprintBarFill.style.width = charge + "%";
+            
+            if (duration > 2000) {
+                currentSpeed = 10; // Double speed
+                isSprinting = true;
+                sprintBarFill.style.background = "#FFD700"; // Gold when active
+            } else {
+                isSprinting = false;
+                sprintBarFill.style.background = "#00ffff";
+            }
+        }
+
+        if (keys['ArrowUp'] && dylan.y > 180) { dylan.y -= currentSpeed; dylan.isMoving = true; }
+        if (keys['ArrowDown'] && dylan.y + dylan.h < 600) { dylan.y += currentSpeed; dylan.isMoving = true; }
+        if (keys['ArrowLeft'] && dylan.x > 0) { dylan.x -= currentSpeed; dylan.dirX = -1; dylan.isMoving = true; }
+        if (keys['ArrowRight'] && dylan.x + dylan.w < 800) { dylan.x += currentSpeed; dylan.dirX = 1; dylan.isMoving = true; }
+
+        if (remainingHeadStart <= 0) {
+            let dx = dylan.x - melissa.x;
+            let dy = dylan.y - melissa.y;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist > 10) {
+                melissa.x += (dx/dist) * melissa.speed;
+                melissa.y += (dy/dist) * melissa.speed;
+                melissa.dirX = dx > 0 ? 1 : -1;
+            }
+            if (dist < 40) { gameState = 'LOST'; endGame(); }
+        }
+
+        for (let i = socks.length - 1; i >= 0; i--) {
+            let s = socks[i];
+            if (dylan.x < s.x + 30 && dylan.x + dylan.w > s.x && 
+                dylan.y < s.y + 30 && dylan.y + dylan.h > s.y) {
+                socks.splice(i, 1);
+                socksCollected++;
+                scoreSpan.innerText = socksCollected;
+                if (socksCollected >= socksNeeded) {
+                    statusMsg.innerText = "RUN TO THE DOGGY DOOR!";
+                    statusMsg.style.color = "#00FF00";
+                }
+            }
+        }
+
+        if (socksCollected >= socksNeeded) {
+            if (dylan.y < door.y + door.h && dylan.x > door.x - 20 && dylan.x < door.x + door.w + 20) {
+                gameState = 'WON'; endGame();
+            }
+        }
+    }
+
+    function endGame() {
+        endScreenControls.style.display = 'flex'; 
+        mobileControls.style.display = 'none'; 
+        sprintBarContainer.style.display = 'none';
+        statusMsg.innerText = "";
+    }
+
+    function draw() {
+        if(gameState === 'START') return;
+
+        ctx.clearRect(0,0, canvas.width, canvas.height);
+
+        if (gameState === 'WON') { drawWinScene(); return; }
+        if (gameState === 'LOST') { drawLoseScene(); return; }
+
+        drawEnvironment();
+        socks.forEach(s => drawRealSock(s.x, s.y, s.color1, s.color2));
+        drawDylan(dylan.x, dylan.y, dylan.dirX, socksCollected > 0);
+        
+        let elapsed = Date.now() - startTime;
+        if (elapsed > headStartDuration || melissa.x > -100) {
+             drawMelissa(melissa.x, melissa.y, melissa.dirX, false);
+        }
+    }
+
     function roundRect(x, y, w, h, radius) {
         if (w < 2 * radius) radius = w / 2;
         if (h < 2 * radius) radius = h / 2;
@@ -467,17 +590,11 @@ window.onload = function() {
         ctx.beginPath(); ctx.arc(x-10, y+10, 25, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(x+30, y+5, 25, 0, Math.PI*2); ctx.fill();
     }
-
     function drawFence(x, y) {
-        ctx.fillStyle = "#c19a6b"; // Tan wood color
-        // Posts
-        ctx.fillRect(x, y, 15, 50);
-        ctx.fillRect(x+40, y, 15, 50);
-        // Rails
-        ctx.fillRect(x-10, y+10, 70, 8);
-        ctx.fillRect(x-10, y+30, 70, 8);
+        ctx.fillStyle = "#c19a6b"; 
+        ctx.fillRect(x, y, 15, 50); ctx.fillRect(x+40, y, 15, 50);
+        ctx.fillRect(x-10, y+10, 70, 8); ctx.fillRect(x-10, y+30, 70, 8);
     }
-
     function drawShed(x, y) {
         ctx.fillStyle = "#f5f5f5"; ctx.fillRect(x, y, 100, 80);
         ctx.fillStyle = "#616161"; 
@@ -492,18 +609,9 @@ window.onload = function() {
         grad.addColorStop(0, "#a8c0ff"); grad.addColorStop(1, "#3f2b96"); 
         ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
         
-        // Grass area
         ctx.fillStyle = "#66bb6a"; ctx.fillRect(0, 300, canvas.width, 300);
-        
-        // Background fence and trees
-        for(let i=0; i<canvas.width; i+=60) {
-            drawTree(i-30, 280); // Trees behind fence
-            drawFence(i, 300);   // Fence on horizon
-        }
-
-        // Foreground objects
-        drawShed(50, 350); 
-        drawTree(650, 350); drawTree(720, 380); drawTree(580, 400); // Original foreground trees
+        for(let i=0; i<canvas.width; i+=60) { drawTree(i-30, 280); drawFence(i, 300); }
+        drawShed(50, 350); drawTree(650, 350); drawTree(720, 380); drawTree(580, 400);
 
         let runX = 400 + Math.sin(frame * 0.05) * 300;
         let runY = 400 + Math.cos(frame * 0.07) * 50; 
@@ -520,7 +628,7 @@ window.onload = function() {
 
     function drawLoseScene() {
         let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        grad.addColorStop(0, "#a8c0ff"); grad.addColorStop(1, "#3f2b96");
+        grad.addColorStop(0, "#a8c0ff"); grad.addColorStop(1, "#3f2b96"); 
         ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
 
         ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
