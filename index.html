@@ -54,14 +54,15 @@
         }
 
         /* --- BUTTON STYLES --- */
-        /* Standard Purple Button (for Start Screen) */
+        
+        /* 1. Purple Button (Start & Lose Screen) */
         .purple-btn {
             padding: 16px 60px;
             font-size: 26px;
             background: linear-gradient(135deg, #b06ab3 0%, #450b5a 100%);
             color: white;
             border: 2px solid rgba(255,255,255,0.4);
-            border-radius: 50px;
+            border-radius: 50px; /* Pill shape */
             cursor: pointer; 
             font-weight: 600;
             box-shadow: 0 8px 20px rgba(75, 0, 130, 0.4);
@@ -73,33 +74,35 @@
             left: 50%;
             bottom: 28%; 
             transform: translateX(-50%);
+            white-space: nowrap;
         }
         .purple-btn:hover { transform: translateX(-50%) scale(1.05) translateY(-3px); }
         .purple-btn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
 
-        /* New White Button (for Win Screen) */
-        .white-btn {
-            padding: 18px 70px;
-            font-size: 28px;
+        /* 2. White "Get More Socks" Button (Win Screen Only) */
+        /* 50% smaller, rectangular with smooth corners */
+        .win-btn {
+            padding: 12px 35px; /* Smaller padding */
+            font-size: 18px;    /* Smaller font */
             background: white;
             color: black;
-            border: 3px solid #111;
-            border-radius: 50px;
+            border: 2px solid #111;
+            border-radius: 15px; /* Smooth rectangle corners */
             cursor: pointer; 
             font-weight: 800;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Nice shadow */
             transition: all 0.2s;
             pointer-events: auto;
             text-transform: uppercase;
             letter-spacing: 1px;
             position: absolute;
             left: 50%;
-            bottom: 12%; 
+            bottom: 15%; 
             transform: translateX(-50%);
             white-space: nowrap;
         }
-        .white-btn:hover { transform: translateX(-50%) scale(1.05) translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
-        .white-btn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
+        .win-btn:hover { transform: translateX(-50%) scale(1.05) translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+        .win-btn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
 
 
         /* --- END SCREEN --- */
@@ -215,7 +218,7 @@
     </div>
 
     <div id="endScreenControls">
-        <button id="tryAgainBtn" class="white-btn">GET MORE SOCKS</button>
+        <button id="endGameBtn" class="purple-btn">TRY AGAIN</button>
     </div>
 </div>
 
@@ -226,6 +229,7 @@ window.onload = function() {
     const ctx = canvas.getContext('2d');
     const startScreen = document.getElementById('startScreen');
     const endScreenControls = document.getElementById('endScreenControls');
+    const endGameBtn = document.getElementById('endGameBtn');
     const inGameUI = document.getElementById('inGameUI');
     const statusMsg = document.getElementById('statusMsg');
     const scoreSpan = document.getElementById('scoreSpan');
@@ -237,7 +241,7 @@ window.onload = function() {
     const caughtImg = new Image(); caughtImg.src = 'caught.jpg';
 
     document.getElementById('startBtn').onclick = startGame;
-    document.getElementById('tryAgainBtn').onclick = resetGame;
+    endGameBtn.onclick = resetGame;
 
     function resizeGame() {
         const targetRatio = 800 / 600; 
@@ -543,7 +547,15 @@ window.onload = function() {
         mobileControls.style.display = 'none'; 
         sprintBarContainer.style.display = 'none';
         statusMsg.innerText = "";
-        if(gameState === 'WON') winStartTime = Date.now();
+        
+        if (gameState === 'WON') {
+            winStartTime = Date.now();
+            endGameBtn.className = 'win-btn';
+            endGameBtn.innerText = 'GET MORE SOCKS';
+        } else {
+            endGameBtn.className = 'purple-btn';
+            endGameBtn.innerText = 'TRY AGAIN';
+        }
     }
 
     function draw() {
@@ -627,8 +639,13 @@ window.onload = function() {
         ctx.fillStyle = grad; ctx.fillRect(0,0, canvas.width, canvas.height);
         
         ctx.fillStyle = "#66bb6a"; ctx.fillRect(0, 300, canvas.width, 300);
-        // Taller background trees (moved up y-axis)
-        for(let i=0; i<canvas.width; i+=60) { drawTree(i-30, 260); drawFence(i, 300); }
+        
+        // 1. Draw Background Trees First
+        for(let i=0; i<canvas.width; i+=60) { drawTree(i-30, 260); }
+        
+        // 2. Draw Fence ON TOP (so you see trees through gaps)
+        for(let i=0; i<canvas.width; i+=60) { drawFence(i, 300); }
+
         drawShed(50, 350); 
         // Bigger foreground trees (scaled up)
         drawTree(650, 330, 1.5); drawTree(740, 360, 1.4); drawTree(560, 380, 1.3);
@@ -649,8 +666,13 @@ window.onload = function() {
         }
 
         ctx.font = "bold 50px Fredoka"; ctx.textAlign = "center"; 
-        ctx.fillStyle = "white"; ctx.shadowColor="rgba(0,0,0,0.3)"; ctx.shadowBlur=10;
-        ctx.fillText("FREEDOM!", 400, 100); ctx.shadowBlur=0;
+        
+        // Freedom Text Outline
+        ctx.strokeStyle = "black"; ctx.lineWidth = 4;
+        ctx.strokeText("FREEDOM!", 400, 100);
+        ctx.fillStyle = "white"; 
+        ctx.fillText("FREEDOM!", 400, 100);
+        
         ctx.font = "24px Fredoka"; 
         ctx.fillText("Dylan is free in the garden!", 400, 150);
     }
