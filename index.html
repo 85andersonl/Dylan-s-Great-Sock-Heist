@@ -62,7 +62,7 @@
             background: linear-gradient(135deg, #b06ab3 0%, #450b5a 100%);
             color: white;
             border: 2px solid rgba(255,255,255,0.4);
-            border-radius: 50px; /* Pill shape */
+            border-radius: 50px; 
             cursor: pointer; 
             font-weight: 600;
             box-shadow: 0 8px 20px rgba(75, 0, 130, 0.4);
@@ -72,7 +72,7 @@
             letter-spacing: 1px;
             position: absolute;
             left: 50%;
-            bottom: 28%; 
+            bottom: 28%; /* Keeps aligned with background image */
             transform: translateX(-50%);
             white-space: nowrap;
         }
@@ -80,17 +80,16 @@
         .purple-btn:active { transform: translateX(-50%) scale(0.95) translateY(2px); }
 
         /* 2. White "Get More Socks" Button (Win Screen Only) */
-        /* 50% smaller, rectangular with smooth corners */
         .win-btn {
-            padding: 12px 35px; /* Smaller padding */
-            font-size: 18px;    /* Smaller font */
+            padding: 12px 35px;
+            font-size: 18px;    
             background: white;
             color: black;
             border: 2px solid #111;
-            border-radius: 15px; /* Smooth rectangle corners */
+            border-radius: 15px; /* Smooth rectangle */
             cursor: pointer; 
             font-weight: 800;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Nice shadow */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             transition: all 0.2s;
             pointer-events: auto;
             text-transform: uppercase;
@@ -189,24 +188,38 @@
             letter-spacing: 1px;
         }
 
-        /* --- MOBILE ADJUSTMENTS --- */
+        /* --- MOBILE ADJUSTMENTS (MEDIA QUERIES) --- */
         @media (max-width: 768px) {
             .purple-btn {
-                padding: 12px 40px; 
-                font-size: 18px;    
-                bottom: 25%;        
+                padding: 12px 40px; /* Reduce padding */
+                font-size: 18px;    /* Reduce font size */
+                /* Removed 'bottom' override so it stays aligned with desktop ratio */
             }
+            
             .win-btn {
                 padding: 10px 30px;
                 font-size: 16px;
                 bottom: 12%;
             }
+
             .d-btn {
                 width: 50px; height: 50px; 
                 font-size: 22px;
             }
+
+            #inGameUI {
+                font-size: 18px;
+                padding: 6px 12px;
+            }
+
             #sprintBarContainer {
                 top: 70px;
+                width: 120px;
+            }
+            
+            #statusMsg {
+                font-size: 18px;
+                bottom: 85px; 
             }
         }
     </style>
@@ -605,7 +618,7 @@ window.onload = function() {
         ctx.restore();
     }
     function drawFence(x, y) {
-        ctx.fillStyle = "#ffffff"; // White fence
+        ctx.fillStyle = "#ffffff"; 
         ctx.fillRect(x, y, 15, 50); ctx.fillRect(x+40, y, 15, 50);
         ctx.fillRect(x-10, y+10, 70, 8); ctx.fillRect(x-10, y+30, 70, 8);
     }
@@ -620,14 +633,13 @@ window.onload = function() {
     function drawPig(x, y, dir) {
         ctx.save(); ctx.translate(x, y); if(dir === -1) ctx.scale(-1,1);
         let bounce = Math.sin(frame * 0.2) * 3;
-        ctx.fillStyle = "#ffcccb"; // Pink body
+        ctx.fillStyle = "#ffcccb"; 
         ctx.beginPath(); ctx.ellipse(0, 20+bounce, 30, 20, 0, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(25, 15+bounce, 15, 0, Math.PI*2); ctx.fill(); // Head
-        ctx.fillStyle = "#ffb6c1"; ctx.beginPath(); ctx.ellipse(35, 15+bounce, 8, 6, 0, 0, Math.PI*2); ctx.fill(); // Snout
-        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(28, 12+bounce, 2, 0, Math.PI*2); ctx.fill(); // Eye
-        ctx.strokeStyle = "#ffcccb"; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(-25, 20+bounce); ctx.quadraticCurveTo(-35, 10+bounce, -30, 25+bounce); ctx.stroke(); // Tail
+        ctx.beginPath(); ctx.arc(25, 15+bounce, 15, 0, Math.PI*2); ctx.fill(); 
+        ctx.fillStyle = "#ffb6c1"; ctx.beginPath(); ctx.ellipse(35, 15+bounce, 8, 6, 0, 0, Math.PI*2); ctx.fill(); 
+        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(28, 12+bounce, 2, 0, Math.PI*2); ctx.fill(); 
+        ctx.strokeStyle = "#ffcccb"; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(-25, 20+bounce); ctx.quadraticCurveTo(-35, 10+bounce, -30, 25+bounce); ctx.stroke(); 
         
-        // ANIMATED LEGS
         ctx.fillStyle = "#ffcccb"; 
         let legMove = Math.sin(frame * 0.4) * 8; 
         ctx.fillRect(-15 + legMove, 35+bounce, 8, 15);
@@ -645,7 +657,6 @@ window.onload = function() {
         ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(28, 15+bounce, 6, 10, 0, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(30, 13+bounce, 2, 0, Math.PI*2); ctx.fill();
         
-        // ANIMATED LEGS
         let legMove = Math.sin(frame * 0.6) * 10; 
         ctx.fillRect(-15 + legMove, 35+bounce, 8, 15);
         ctx.fillRect(5 - legMove, 35+bounce, 8, 15);
@@ -661,26 +672,19 @@ window.onload = function() {
         
         ctx.fillStyle = "#66bb6a"; ctx.fillRect(0, 300, canvas.width, 300);
         
-        // 1. Draw Background Trees First
         for(let i=0; i<canvas.width; i+=60) { drawTree(i-30, 260); }
-        
-        // 2. Draw Fence ON TOP (so you see trees through gaps)
         for(let i=0; i<canvas.width; i+=60) { drawFence(i, 300); }
 
         drawShed(50, 350); 
-        // Bigger foreground trees (scaled up)
         drawTree(650, 330, 1.5); drawTree(740, 360, 1.4); drawTree(560, 380, 1.3);
 
-        // Dylan
         let runX = 400 + Math.sin(frame * 0.05) * 250;
         let runDir = Math.cos(frame * 0.05) > 0 ? 1 : -1;
         dylan.isMoving = true; drawDylan(runX, 400, runDir, true);
 
-        // Pig
         let pigX = 150 + Math.sin(frame * 0.07) * 100;
         drawPig(pigX, 420, Math.cos(frame * 0.07) > 0 ? 1 : -1);
 
-        // Small Dog (joins after 3s)
         if (Date.now() - winStartTime > 3000) {
              let dogX = 600 + Math.cos(frame * 0.06) * 150;
              drawSmallDog(dogX, 430, -Math.sin(frame * 0.06) > 0 ? 1 : -1);
@@ -688,7 +692,6 @@ window.onload = function() {
 
         ctx.font = "bold 50px Fredoka"; ctx.textAlign = "center"; 
         
-        // Freedom Text Outline
         ctx.strokeStyle = "black"; ctx.lineWidth = 4;
         ctx.strokeText("FREEDOM!", 400, 100);
         ctx.fillStyle = "white"; 
