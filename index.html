@@ -45,14 +45,14 @@
 
         /* --- START SCREEN --- */
         #startScreen {
+            /* Make sure you upload 'cover.jpg' to GitHub! */
             background-image: url('cover.jpg'); 
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            /* Gradient fallback in case image loads slow */
+            /* Fallback gradient if image is missing */
             background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%), url('cover.jpg');
             background-blend-mode: normal; 
-            
             display: block; 
         }
 
@@ -89,7 +89,7 @@
         #startBtn {
             position: absolute;
             left: 50%;
-            bottom: 28%; /* Adjusted slightly for better alignment */
+            bottom: 28%; 
             transform: translateX(-50%);
         }
         #startBtn:hover { transform: translateX(-50%) scale(1.05) translateY(-3px); }
@@ -157,24 +157,30 @@
             backdrop-filter: blur(4px);
         }
         
-        /* Sprint Bar */
+        /* Sprint Bar - MOVED DOWN AND RECOLORED */
         #sprintBarContainer {
-            position: absolute; top: 70px; left: 20px;
+            position: absolute; 
+            top: 100px; /* Moved down to fix overlap */
+            left: 20px;
             width: 150px; height: 10px;
             background: rgba(0,0,0,0.5);
             border-radius: 5px;
             border: 1px solid white;
             display: none;
+            z-index: 15;
         }
         #sprintBarFill {
             width: 0%; height: 100%;
-            background: #00ffff;
+            background: #32CD32; /* Green charging color */
             border-radius: 5px;
             transition: width 0.1s;
         }
         #sprintLabel {
-            position: absolute; top: -20px; left: 0;
-            font-size: 12px; color: #00ffff; font-weight: bold;
+            position: absolute; top: -25px; left: 0;
+            font-size: 14px; 
+            color: black; /* Black text */
+            font-weight: bold;
+            text-shadow: 1px 1px 2px white; /* White shadow for readability */
         }
     </style>
 </head>
@@ -257,7 +263,6 @@ window.onload = function() {
     // Sprint Vars
     let moveStartTime = 0; 
     let isSprinting = false;
-    let sprintCharge = 0; // 0 to 100
 
     // --- Objects ---
     let dylan = { x: 400, y: 400, w: 80, h: 55, baseSpeed: 5, speed: 5, dirX: 1, isMoving: false };
@@ -280,7 +285,6 @@ window.onload = function() {
         if (!keys['ArrowUp'] && !keys['ArrowDown'] && !keys['ArrowLeft'] && !keys['ArrowRight']) {
             moveStartTime = 0; 
             isSprinting = false;
-            sprintCharge = 0;
             sprintBarFill.style.width = "0%";
         }
     }
@@ -330,7 +334,7 @@ window.onload = function() {
         frame = 0;
         startTime = Date.now();
         moveStartTime = 0; 
-        sprintCharge = 0;
+        sprintBarFill.style.width = "0%";
         
         dylan.x = 400; dylan.y = 400;
         melissa.x = -150; melissa.y = 400;
@@ -387,7 +391,6 @@ window.onload = function() {
         if (dir === -1) ctx.scale(-1, 1);
 
         if (isSprinting && gameState === 'PLAYING') {
-            // SPARK EFFECT
             ctx.fillStyle = `hsl(${frame * 20}, 100%, 70%)`; 
             for(let i=0; i<3; i++) {
                 let sx = -50 - Math.random() * 20;
@@ -483,28 +486,26 @@ window.onload = function() {
             statusMsg.style.color = "white";
         } else if (remainingHeadStart <= 0 && melissa.x < -50) {
              statusMsg.innerText = "MELISSA IS HERE! RUN!"; statusMsg.style.color = "#FF1493"; 
-        } else if (socksCollected < socksNeeded) {
+        } else if (socksCollected < socksNeeded && statusMsg.innerText !== "Collect all socks first!") {
              statusMsg.innerText = ""; 
         }
 
         dylan.isMoving = false;
         let currentSpeed = dylan.baseSpeed;
         
-        // --- FIXED SPRINT LOGIC ---
-        // If movement started and > 2s has passed
+        // --- SPRINT LOGIC ---
         if (moveStartTime > 0) {
             let duration = Date.now() - moveStartTime;
-            // Charge the bar
             let charge = Math.min(100, (duration / 2000) * 100);
             sprintBarFill.style.width = charge + "%";
             
             if (duration > 2000) {
-                currentSpeed = 10; // Double speed
+                currentSpeed = 10; 
                 isSprinting = true;
-                sprintBarFill.style.background = "#FFD700"; // Gold when active
+                sprintBarFill.style.background = "#00FF00"; // Bright Green Boost
             } else {
                 isSprinting = false;
-                sprintBarFill.style.background = "#00ffff";
+                sprintBarFill.style.background = "#32CD32"; // Standard Green Charge
             }
         }
 
@@ -512,6 +513,17 @@ window.onload = function() {
         if (keys['ArrowDown'] && dylan.y + dylan.h < 600) { dylan.y += currentSpeed; dylan.isMoving = true; }
         if (keys['ArrowLeft'] && dylan.x > 0) { dylan.x -= currentSpeed; dylan.dirX = -1; dylan.isMoving = true; }
         if (keys['ArrowRight'] && dylan.x + dylan.w < 800) { dylan.x += currentSpeed; dylan.dirX = 1; dylan.isMoving = true; }
+
+        // --- DOOR COLLISION FIX ---
+        if (dylan.y < door.y + door.h && dylan.x > door.x - 20 && dylan.x < door.x + door.w + 20) {
+             if (socksCollected >= socksNeeded) {
+                 gameState = 'WON'; endGame();
+             } else {
+                 // Show message if trying to enter early
+                 statusMsg.innerText = "Collect all socks first!";
+                 statusMsg.style.color = "white";
+             }
+        }
 
         if (remainingHeadStart <= 0) {
             let dx = dylan.x - melissa.x;
@@ -536,12 +548,6 @@ window.onload = function() {
                     statusMsg.innerText = "RUN TO THE DOGGY DOOR!";
                     statusMsg.style.color = "#00FF00";
                 }
-            }
-        }
-
-        if (socksCollected >= socksNeeded) {
-            if (dylan.y < door.y + door.h && dylan.x > door.x - 20 && dylan.x < door.x + door.w + 20) {
-                gameState = 'WON'; endGame();
             }
         }
     }
