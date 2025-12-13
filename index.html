@@ -94,7 +94,7 @@
             letter-spacing: 1px;
             position: absolute;
             left: 50%;
-            bottom: 12%; /* Lower position */
+            bottom: 12%; 
             transform: translateX(-50%);
             white-space: nowrap;
         }
@@ -417,7 +417,8 @@ window.onload = function() {
 
         ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(35, -15 + moveBounce, 24, 0, Math.PI * 2); ctx.fill();
         ctx.beginPath(); ctx.ellipse(28, -25 + moveBounce, 10, 18, -0.5, 0, Math.PI * 2); ctx.fill(); 
-        ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(35, -15 + moveBounce, 6, 18, 0, 0, Math.PI * 2); ctx.fill(); 
+        ctx.fillStyle = "white"; 
+        ctx.beginPath(); ctx.ellipse(35, -15 + moveBounce, 6, 18, 0, 0, Math.PI * 2); ctx.fill(); 
         ctx.beginPath(); ctx.ellipse(38, -8 + moveBounce, 12, 10, 0, 0, Math.PI * 2); ctx.fill(); 
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(42, -12 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
         ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(36, -20 + moveBounce, 3, 0, Math.PI * 2); ctx.fill(); 
@@ -592,7 +593,13 @@ window.onload = function() {
         ctx.fillStyle = "#ffb6c1"; ctx.beginPath(); ctx.ellipse(35, 15+bounce, 8, 6, 0, 0, Math.PI*2); ctx.fill(); // Snout
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(28, 12+bounce, 2, 0, Math.PI*2); ctx.fill(); // Eye
         ctx.strokeStyle = "#ffcccb"; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(-25, 20+bounce); ctx.quadraticCurveTo(-35, 10+bounce, -30, 25+bounce); ctx.stroke(); // Tail
-        ctx.fillStyle = "#ffcccb"; ctx.fillRect(-15, 35+bounce, 8, 15); ctx.fillRect(5, 35+bounce, 8, 15); // Legs
+        
+        // ANIMATED LEGS
+        ctx.fillStyle = "#ffcccb"; 
+        let legMove = Math.sin(frame * 0.4) * 8; 
+        ctx.fillRect(-15 + legMove, 35+bounce, 8, 15);
+        ctx.fillRect(5 - legMove, 35+bounce, 8, 15);
+        
         ctx.restore();
     }
 
@@ -604,7 +611,12 @@ window.onload = function() {
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(25, 15+bounce, 14, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(28, 15+bounce, 6, 10, 0, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(30, 13+bounce, 2, 0, Math.PI*2); ctx.fill();
-        ctx.fillRect(-15, 35+bounce, 8, 15); ctx.fillRect(5, 35+bounce, 8, 15);
+        
+        // ANIMATED LEGS
+        let legMove = Math.sin(frame * 0.6) * 10; 
+        ctx.fillRect(-15 + legMove, 35+bounce, 8, 15);
+        ctx.fillRect(5 - legMove, 35+bounce, 8, 15);
+        
         ctx.restore();
     }
 
